@@ -1,0 +1,366 @@
+```{r setup_visualize_corrected, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE)
+
+## Load packages
+library(duckdb)
+library(arrow)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(leaflet)
+library(hrbrthemes)
+
+## First we get data from the database ----
+# con <- dbConnect(duckdb::duckdb()) # Database Connection
+# parquet_location <- "data/parquet_calculator/" # Parquet file folder
+# 
+# # Load files from the Parquet file folder and connects to duckdb
+# for (fil in list.files(parquet_location, pattern = ".parquet")) {
+#   dbname <- substring(stringr::str_replace(string = fil, pattern = ".parquet", replacement = ""), 3)
+#   fil <- paste0(parquet_location, fil)
+#   # Reads Parquet File to an Arrow Table
+#   arrow_file <- arrow::read_parquet(fil, as_data_frame = FALSE)
+#   # Registers arrow table as a DuckDB view
+#   arrow::to_duckdb(arrow_file, table_name = dbname, con = con)
+# }
+
+
+## duckdb: get database -----
+con <- dbConnect(duckdb::duckdb(), dbdir="data/sleep22_calculations.duckdb", read_only=TRUE)
+```
+
+```{r}
+## Load data
+
+## DATA: sleep apnea costs rounded up
+summary_slapnea_costs <- tbl(con, "summary_slapnea_costs_corrected") %>% 
+  collect() %>% 
+  mutate(
+    patient_direct_cost = round(patient_direct_cost, 0),
+    patient_nonhealthcare_cost = round(patient_nonhealthcare_cost, 0),
+    patient_productivity_cost = round(patient_productivity_cost, 0),
+    patient_total_cost = round(patient_total_cost, 0)
+  )
+
+## DATA: PAtient direct cost per countriesCreate data for the barplot
+tbl(con, "summary_slapnea_costs_corrected") %>% 
+  select(location_name, patient_direct_cost, patient_nonhealthcare_cost, patient_productivity_cost) %>% 
+  pivot_longer(c(patient_direct_cost, patient_nonhealthcare_cost, patient_productivity_cost)) %>% 
+  collect() -> d_patient_direct_cost
+
+# unique(d_patient_direct_cost$name)
+
+## Sleep apnea costs total MAX MEAN and MIN ----
+
+## ROUNDED MAX OF EUROS PER PATIENT
+tbl(con, "summary_slapnea_costs_corrected") %>% 
+  select(location_name, patient_total_cost) %>% 
+  collect()  %>% 
+  group_by(location_name) %>% 
+  summarise(sum = round(sum(patient_total_cost), -2)) %>% 
+  arrange(sum) %>% 
+  select(sum) %>% 
+  tail(1) %>% 
+  pull() -> max_value
+
+
+tbl(con, "summary_slapnea_costs_corrected") %>% 
+  select(location_name, patient_total_cost) %>% 
+  collect()  %>% 
+  group_by(location_name) %>% 
+  summarise(sum = round(sum(patient_total_cost), -2)) %>% 
+  arrange(sum) %>% 
+  select(sum, location_name) %>% 
+  tail(1) %>% 
+  pull() -> max_location
+
+## MEAN
+tbl(con, "summary_slapnea_costs_corrected") %>% 
+  select(location_name, patient_total_cost) %>% 
+  collect()  %>% 
+  summarise(mean = round(mean(patient_total_cost), -2)) %>% 
+  arrange(mean) %>% 
+  select(mean) %>% 
+  tail(1) %>% 
+  pull() -> mean_value
+
+
+## Weights ----
+tbl(con, "slapnea_costs_corrected") %>% 
+  filter(corrected == TRUE) %>% 
+  summarise(mean = mean(index)
+            # ,
+            # sd = sd(index)
+            ) %>% 
+  collect() %>% 
+  as.numeric() -> weights_mean
+```
+
+
+
+# Money corrected results
+
+This chapter presents results with money value corrected calculations. Total costs are approximally `r mean_value` euros per patient. Maximum cost is `r max_value`  euros per patient in `r max_location`. Weightening is made so that Italy money value is 1 and other countries weight follows that with mean value `r round(weights_mean, 3)` by statistics of [Eurostat](https://ec.europa.eu/eurostat/web/main/data/database). 
+
+Countries, which are weightened are
+
+```{r}
+tbl(con, "slapnea_costs_corrected") %>% 
+  filter(corrected == TRUE) %>% 
+  group_by(location_name) %>% 
+  summarise(TRUE) %>% 
+  arrange(location_name) %>% 
+  collect() -> temp
+temp$location_name
+```
+and following are having a weight value 1
+
+```{r}
+tbl(con, "slapnea_costs_corrected") %>% 
+  filter(corrected == FALSE) %>% 
+  group_by(location_name) %>% 
+  summarise(FALSE) %>% 
+  arrange(location_name) %>% 
+  collect() -> temp
+temp$location_name
+```
+
+
+
+```{r plot_europe_cost_corrected1, message=FALSE}
+## Europe map with cost per patient ----
+## Thanks to <https://egallic.fr/en/european-map-using-r/>
+library(ggplot2)
+library(grid)
+library(rworldmap)
+library(mapproj)
+
+# Get the world map
+worldMap <- getMap()
+
+## Check which are not included / names are different
+tmp <- tbl(con, "summary_slapnea_costs") %>% group_by(location_name) %>% summarise(1) %>% select(location_name) %>% collect()
+tmp <- tmp$location_name
+# sort(as.character(worldMap$NAME))
+tmp[!tmp %in% worldMap$NAME ]
+
+## Need to change few location names
+worldMap@data$NAME <- as.character(worldMap@data$NAME)
+worldMap@data$NAME[worldMap@data$NAME == "Bosnia and Herz."] <- "Bosnia and Herzegovina" ## TODO check if names are correct in both datas
+worldMap@data$NAME[worldMap@data$NAME == "Czech Rep."] <- "Czech Republic" ## TODO check if names are correct in both datas
+
+## Check again
+tmp[!tmp %in% worldMap$NAME ]
+```
+
+
+```{r plot_europe_cost_corrected2, message=FALSE}
+# Select only the index of states
+europea <- unique(summary_slapnea_costs$location_name)
+indEU <- which(worldMap$NAME %in% tmp)
+
+# View(worldMap$NAME)
+# Extract longitude and latitude border's coordinates of members states
+europeCoords <- lapply(indEU, function(i){
+  df <- data.frame(worldMap@polygons[[i]]@Polygons[[1]]@coords)
+  df$region =as.character(worldMap$NAME[i])
+  colnames(df) <- list("long", "lat", "region")
+  return(df)
+})
+
+europeCoords <- do.call("rbind", europeCoords)
+
+# Add some data for each member
+europeCoords$value <- summary_slapnea_costs$patient_total_cost[match(europeCoords$region, summary_slapnea_costs$location_name)] 
+
+# Plot the map
+ggplot() + 
+  geom_polygon(data = europeCoords, 
+               aes(x = long, y = lat, group = region, fill = value),
+               colour = "black", size = 0.1) +
+  coord_map(xlim = c(-22, 80),  ylim = c(30, 71)) +
+  scale_fill_gradient(name = "Euros", high = "#FF0000FF", low = "#FFFF00FF", na.value = "grey50") +
+  labs(title = "Sleep apnea cost in Europe", subtitle = "Total cost per patient",x="", y="") +
+  hrbrthemes::theme_ipsum() +
+  theme(
+    panel.grid.minor = element_line(colour = NA),
+    panel.background = element_rect(fill = NA, colour = NA),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(), axis.ticks.x = element_blank(),
+    axis.ticks.y = element_blank(), axis.title = element_blank(),
+    # rect = element_blank(),
+    plot.margin = unit(0 * c(-1.5, -1.5, -1.5, -1.5), "lines")
+    ) -> plot_europe_cost
+ggsave("img/plot-europe-cost-corrected.png")
+```
+
+```{r, fig.cap="Estimated sleep apnea costs in Europe per patient in 2019."}
+plot_europe_cost
+```
+
+```{r, fig.cap="Total costs and per patient."}
+tbl(con, "summary_slapnea_costs_corrected") %>% 
+  select(location_name, patient_total_cost, direct_cost) %>%
+  # pivot_longer(c(patient_direct_cost, patient_nonhealthcare_cost, patient_productivity_cost)) %>% 
+  collect() -> d_total_cost
+
+ggplot(data = d_total_cost) +
+  geom_text(aes(x=patient_total_cost, y=direct_cost, label=location_name), position=position_jitter(height=0.4) ) +
+  hrbrthemes::theme_ipsum() +
+  labs(title="Sleep apnea total cost", x="Euros / patient", y="Total") 
+
+# ggplot(data = d_total_cost) +
+#   geom_boxplot(aes(patient_total_cost)) +
+#   # geom_text(aes(x=patient_total_cost, y=0, label=location_name), position=position_jitter(height=0.4) ) +
+#   hrbrthemes::theme_ipsum() +
+#   labs(title="Total cost variance", x="Euros / patient", y="") 
+```
+
+```{r, echo=FALSE, fig.width=10, fig.height=11, fig.fullwidth=TRUE, fig.cap="Cost as direct healthcare, direct non-healthcare and productivity lost costs."}
+## Barplot of the costs
+## Create a bar plot by countries
+ggplot(data = d_patient_direct_cost) +
+  geom_bar(aes(x=reorder(location_name, value), y=value, fill=name), stat="identity") +
+  coord_flip() +
+  labs(x="", 
+       y="euros", 
+       fill="",
+       title="Costs  by countries",
+       subtitle = "Patient direct healthcare, direct non-healthcare and productivity lost costs") +
+  hrbrthemes::theme_ipsum() +
+  # scale_fill_discrete(labels=c('Direct healthcare cost', 'Direct non-helthcare cost', 'Productivity losses')) +
+  scale_fill_brewer(palette = "Set2", labels=c('Direct healthcare cost', 'Direct non-helthcare cost', 'Productivity losses')) +
+  scale_y_continuous(expand = c(0,0), limits = c(0, max_value*1.05)) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic"), #Default is hjust=1
+        plot.title.position = "plot", #NEW parameter. Apply for subtitle too.
+        plot.caption.position =  "plot",
+        legend.position = "right")  #NEW parameter
+
+```
+
+### Table: total costs
+
+```{r}
+DT::datatable(summary_slapnea_costs[, c("location_name", "patient_total_cost")] , rownames = FALSE)
+```
+
+
+## Direct costs
+
+```{r plot-europe-direct-cost-corrected.png, message=FALSE}
+# Add some data for each member
+europeCoords$value <- summary_slapnea_costs$patient_direct_cost[match(europeCoords$region, summary_slapnea_costs$location_name)] 
+
+# Plot the map
+ggplot() + 
+  geom_polygon(data = europeCoords, 
+               aes(x = long, y = lat, group = region, fill = value),
+               colour = "black", size = 0.1) +
+  coord_map(xlim = c(-22, 80),  ylim = c(30, 71)) +
+  scale_fill_gradient(name = "Euros / patient", high = "#FF0000FF", low = "#FFFF00FF", na.value = "grey50") +
+  labs(title = "Direct cost", subtitle="Sleep apnea cost in Europe", x="", y="") +
+  hrbrthemes::theme_ipsum() +
+  theme(
+    # panel.grid.minor = element_line(colour = NA), 
+    # panel.background = element_rect(fill = NA, colour = NA),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(), axis.ticks.x = element_blank(),
+    axis.ticks.y = element_blank(), axis.title = element_blank(),
+    # rect = element_blank(),
+    plot.margin = unit(0 * c(-1.5, -1.5, -1.5, -1.5), "lines")
+    ) -> plot_europe_direct_cost
+ggsave("img/plot-europe-direct-cost-corrected.png")
+```
+
+```{r plot-europe-direct-cost_corrected, fig.align="center", fig.width=6, fig.height=6, fig.cap="Estimated sleep apnea direct cost per patient in Europe."}
+plot_europe_direct_cost
+```
+
+### Table: direct costs
+
+```{r}
+DT::datatable(summary_slapnea_costs[, c("location_name", "patient_direct_cost")] , rownames = FALSE)
+```
+
+
+
+## Direct non-healthcare costs
+
+```{r plot-europe-directnonhealthcare-cost_corrected, message=FALSE}
+# Add some data for each member
+europeCoords$value <- summary_slapnea_costs$patient_nonhealthcare_cost[match(europeCoords$region, summary_slapnea_costs$location_name)] 
+
+# Plot the map
+ggplot() + 
+  geom_polygon(data = europeCoords, 
+               aes(x = long, y = lat, group = region, fill = value),
+               colour = "black", size = 0.1) +
+  coord_map(xlim = c(-22, 80),  ylim = c(30, 71)) +
+  scale_fill_gradient(name = "Euros / patient", high = "#FF0000FF", low = "#FFFF00FF", na.value = "grey50") +
+  labs(title = "Direct non-healthcare cost", subtitle="Sleep apnea cost in Europe", x="", y="") +
+  hrbrthemes::theme_ipsum() +
+  theme(
+    # panel.grid.minor = element_line(colour = NA), 
+    # panel.background = element_rect(fill = NA, colour = NA),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(), axis.ticks.x = element_blank(),
+    axis.ticks.y = element_blank(), axis.title = element_blank(),
+    # rect = element_blank(),
+    plot.margin = unit(0 * c(-1.5, -1.5, -1.5, -1.5), "lines")
+    ) -> plot_europe_directnonhealthcare_cost
+ggsave("img/plot-europe-directnonhealthcare-cost-corrected.png")
+```
+
+```{r, fig.align="center", fig.width=6, fig.height=6, fig.cap="Estimated sleep apnea direct non-healthcare cost per patient in Europe."}
+plot_europe_directnonhealthcare_cost
+```
+
+### Table: Direct non-healthcare costs
+
+```{r}
+DT::datatable(summary_slapnea_costs[, c("location_name", "patient_nonhealthcare_cost")] , rownames = FALSE)
+```
+
+## Productivity loss costs
+
+```{r plot-europe-productivityloss-cost_corrected, message=FALSE}
+# Add some data for each member
+europeCoords$value <- summary_slapnea_costs$patient_productivity_cost[match(europeCoords$region, summary_slapnea_costs$location_name)] 
+
+# Plot the map
+ggplot() + 
+  geom_polygon(data = europeCoords, 
+               aes(x = long, y = lat, group = region, fill = value),
+               colour = "black", size = 0.1) +
+  coord_map(xlim = c(-22, 80),  ylim = c(30, 71)) +
+  scale_fill_gradient(name = "Euros / patient", high = "#FF0000FF", low = "#FFFF00FF", na.value = "grey50") +
+  labs(title = "Productivity loss cost", subtitle="Sleep apnea cost in Europe", x="", y="") +
+  hrbrthemes::theme_ipsum() +
+  theme(
+    # panel.grid.minor = element_line(colour = NA), 
+    # panel.background = element_rect(fill = NA, colour = NA),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(), axis.ticks.x = element_blank(),
+    axis.ticks.y = element_blank(), axis.title = element_blank(),
+    # rect = element_blank(),
+    plot.margin = unit(0 * c(-1.5, -1.5, -1.5, -1.5), "lines")
+    ) -> plot_europe_productivityloss_cost
+ggsave("img/plot-europe-productivityloss-cost-corrected.png")
+```
+
+```{r, fig.align="center", fig.width=6, fig.height=6, fig.cap="Estimated sleep apnea productivity losses cost per patient in Europe."}
+plot_europe_productivityloss_cost
+```
+
+### Table: productivity loss cost
+
+```{r}
+DT::datatable(summary_slapnea_costs[, c("location_name", "patient_productivity_cost")] , rownames = FALSE)
+```
+
+
+```{r}
+dbDisconnect(con, shutdown=TRUE)
+```
+

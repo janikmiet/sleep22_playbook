@@ -1,0 +1,278 @@
+```{r, include = FALSE}
+eval_exploreihme <- TRUE #FALSE
+# if(Sys.getenv("GLOBAL_EVAL") != "") eval_exploreihme <- Sys.getenv("GLOBAL_EVAL")
+```
+
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(vroom)
+library(fs)
+library(purrr)
+library(dplyr)
+```
+
+
+# Explorative Data Analysis
+
+In this section we are going to find out more about the data and it's variables, visualizing data and creating tables.
+
+```{r}
+library(duckdb)
+library(arrow)
+library(dplyr)
+
+
+# ## Load from parquet files ----
+# # Reads Parquet File to an Arrow Table
+# arrow_slapnea <- arrow::read_parquet("data/parquet/3_slapnea.parquet", as_data_frame = FALSE)
+# arrow_paf <- arrow::read_parquet("data/parquet/2_paf.parquet", as_data_frame = FALSE)
+# arrow_ihme <- arrow::read_parquet("data/parquet/1_ihme.parquet", as_data_frame = FALSE)
+# arrow_pop <- arrow::read_parquet("data/parquet/0_pop.parquet", as_data_frame = FALSE)
+# 
+# # Gets Database Connection
+# con <- dbConnect(duckdb::duckdb())
+# 
+# # Registers arrow table as a DuckDB view
+# arrow::to_duckdb(arrow_slapnea, table_name = "slapnea", con = con)
+# arrow::to_duckdb(arrow_paf, table_name = "paf", con = con)
+# arrow::to_duckdb(arrow_ihme, table_name = "ihme", con = con)
+# arrow::to_duckdb(arrow_pop, table_name = "pop", con = con)
+# 
+# # dbListTables(con) # not working
+# dbListFields(con, "ihme") # ihme list fields
+# dbListFields(con, "pop") # pop list fields
+# dbListFields(con, "paf") # paf list fields  
+# dbListFields(con, "slapnea") # sleep apnea list fields
+
+
+## Load duckdb database -----
+con <- dbConnect(duckdb::duckdb(), dbdir="data/sleep22.duckdb", read_only=TRUE)
+```
+
+## IHME distinct values
+
+Let's find out different distinct values of the variables
+
+### measure_name
+
+```{r}
+dbGetQuery(con, "SELECT DISTINCT measure_name FROM ihme")
+```
+
+### sex_name
+
+```{r}
+dbGetQuery(con, "SELECT DISTINCT sex_name FROM ihme")
+```
+
+### age_name
+
+```{r}
+dbGetQuery(con, "SELECT DISTINCT age_name FROM ihme")
+```
+
+### metric_name
+
+```{r}
+dbGetQuery(con, "SELECT DISTINCT metric_name FROM ihme")
+```
+
+### year
+
+```{r}
+dbGetQuery(con, "SELECT DISTINCT year FROM ihme")
+```
+
+### cause_name
+
+```{r}
+dbGetQuery(con, "SELECT DISTINCT cause_id, cause_name FROM ihme ORDER BY cause_id")
+```
+
+### Calculator datas
+
+```{r}
+tbl(con, "causes") %>% 
+  collect()
+```
+```{r}
+tbl(con, "osa_armeni") %>% 
+  collect()
+```
+
+```{r}
+tbl(con, "osa_benjafield") %>% 
+  collect()
+```
+
+## PLOT: Population in countries
+
+```{r, fig.cap="Countries population in 2019."}
+## First filter and group dataset to get total population by years and countries
+tbl(con, "pop") %>% 
+  filter(sex_name %in% c("both") & year_id == 2019) %>% 
+  group_by(location_name, year_id) %>% 
+  summarise(total_population = sum(total_population)) %>% 
+  collect() -> dplot
+dplot$year_id <- as.integer(dplot$year_id)
+
+## Draw ordered population bar diagram of the populations
+options(scipen = 999)
+ggplot(data = dplot) +
+  geom_bar(aes(x=reorder(location_name,total_population), y=total_population, group=year_id), position="dodge", stat="identity") +
+  coord_flip() +
+  labs(x="", y="population", title = "Countries total population in 2019")
+```
+
+## PLOT: Finland population 2019
+
+Draw Finland population in 2019
+
+```{r, eval = eval_exploreihme}
+## filter dataset
+tbl(con, "pop") %>% 
+  filter(sex_name %in% c("female", "male") & location_name == "Finland" & year_id == 2019) %>% 
+  collect() -> dplot
+
+## plot age distribution
+library(ggplot2)
+ggplot(data = dplot) +
+  geom_bar(aes(x=age_group, y=total_population, fill=sex_name), stat = "identity") + 
+  labs(x="age", y="freq", title="Finland population 2019")
+```
+
+
+
+```{r, fig.cap="Countries population in 2019."}
+## First filter and group dataset to get total population by years and countries
+tbl(con, "pop") %>% 
+  filter(sex_name %in% c("both") & year_id == 2019) %>% 
+  group_by(location_name, year_id) %>% 
+  summarise(total_population = sum(total_population)) %>% 
+  collect() -> dplot
+dplot$year_id <- as.integer(dplot$year_id)
+
+## Draw ordered population bar diagram of the populations
+options(scipen = 999)
+ggplot(data = dplot) +
+  geom_bar(aes(x=reorder(location_name,total_population), y=total_population, group=year_id), position="dodge", stat="identity") +
+  coord_flip() +
+  labs(x="", y="population", title = "Countries total population in 2019")
+```
+
+
+
+
+## TABLE: Prevalences
+
+Create a table of all prevalences of disease available in the dataset from year 2019. 
+
+```{r}
+total_population <- tbl(con, "pop") %>% 
+  filter(year_id == 2019 & sex_name == "both") %>% 
+  summarise(pop=sum(total_population)) %>% 
+  collect()
+
+tbl(con, "ihme") %>% 
+  filter(measure_name == "Prevalence" & sex_name == "Both" & metric_name == "Number") %>% 
+  group_by(cause_id, cause_name) %>% 
+  summarise(number = round(sum(val), 1)) %>% 
+  collect() %>% 
+  mutate(prevalence = round(100 * number / total_population$pop, 2)) %>% 
+  arrange(cause_id) -> dplot_prev
+```
+
+```{r echo=FALSE}
+DT::datatable(dplot_prev, rownames = FALSE)
+```
+
+
+## TABLE: Incidences
+
+Create a table of all Incidence of disease available in the dataset from year 2019. 
+
+```{r}
+## Calculate Total  2019
+tbl(con, "ihme")  %>% 
+  filter(measure_name == "Incidence" & sex_name == "Both" & metric_name == "Number") %>% 
+  group_by(cause_id, cause_name) %>% 
+  summarise(number = round(sum(val), 1) #,
+            # countries = length(unique(location_name))
+            ) %>% 
+  collect() %>% 
+  mutate(percentage = round(100 * number / total_population$pop, 2)) %>% 
+  arrange(cause_id) -> dplot_prev
+```
+
+```{r echo=FALSE}
+DT::datatable(dplot_prev, rownames = FALSE)
+```
+
+
+## TABLE: Deaths
+
+Create a table of all Incidence of disease available in the dataset from year 2019. 
+
+```{r}
+## Calculate Total  2019
+tbl(con, "ihme")  %>% 
+  filter(measure_name == "Deaths" & sex_name == "Both" & metric_name == "Number") %>% 
+  group_by(cause_id, cause_name) %>% 
+  summarise(number = round(sum(val), 1) #,
+            # countries = length(unique(location_name))
+            ) %>% 
+  collect() %>% 
+  mutate(percentage = round(100 * number / total_population$pop, 2)) %>% 
+  arrange(cause_id) -> dplot_prev
+```
+
+```{r echo=FALSE}
+DT::datatable(dplot_prev, rownames = FALSE)
+```
+
+## TABLE: Prevalences per countries
+
+Group prevalences by countries and calculate percentage of the population (15-74 years old).
+
+```{r}
+filter_age_groups <- c("15 to 19", "20 to 24", "25 to 29", "30 to 34", "35 to 39", "40 to 44", "45 to 49", "50 to 54", "55 to 59", "60 to 64",
+"65 to 69", "70 to 74")
+
+## Prevalences of diseases by eucountries of the 15-74 years old population
+tbl(con, "ihme")  %>% 
+  filter(measure_name == "Prevalence" & sex_name == "Both" & age_name %in% filter_age_groups) %>% 
+  filter(metric_name == "Number") %>% 
+  group_by(location_name, cause_name) %>% 
+  summarise(number = sum(val)) %>% 
+  collect() %>% 
+  mutate(location_name=as.factor(location_name)) -> dplot_prevalences
+
+## filter population 
+tbl(con, "pop") %>% 
+  filter(sex_name == "both" & age_group > 14 & age_group < 75 & year_id == 2019) %>% 
+  group_by(location_name) %>% 
+  summarise(pop = sum(total_population)) %>% 
+  collect() -> dplot_eucountries
+
+## join tables
+dplot_eucountries %>% 
+  right_join(dplot_prevalences, by = "location_name") %>% 
+  mutate(number=round(number,1),
+         percentage=round(100*number/pop, 1)) -> dplot_prevalences
+  
+## Check the dimensions 
+length(unique(dplot_prevalences$location_name)) ## locations
+length(unique(dplot_prevalences$cause_name))    ## causes
+```
+
+```{r echo=FALSE}
+DT::datatable(dplot_prevalences[, c("location_name", "cause_name", "number", "percentage")], filter = 'top', rownames = FALSE )
+```
+
+**Disconnect**
+
+```{r}
+dbDisconnect(con)
+```
+

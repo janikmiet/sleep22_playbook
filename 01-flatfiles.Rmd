@@ -1,0 +1,274 @@
+
+```{r include=FALSE}
+eval_pop = FALSE
+eval_IHME = FALSE
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data
+
+In this section we are going to download and explore datasets before editing and storing data into `duckdb`. Data sets consists of the population and disease prevalances information. It can be downloaded as (several) CSV-files from the links below:
+
+* [Population data](http://ghdx.healthdata.org/record/ihme-data/gbd-2019-population-estimates-1950-2019)
+* [IHME data](http://ghdx.healthdata.org/gbd-results-tool?params=gbd-api-2019-permalink/e77f5cf5b1b5b77568d115f4878cd19b)
+
+Download data manually and store them to `data/` folder. There are many csv-files so loading those can be done easily with `vroom` and `fs` packages. Before transferring datasets into mighty `duckdb` database, we find out little bit more what these data sets holds. 
+
+## Population
+
+We are interested of the population by age and gender in European countries. 
+
+### Load data into R
+
+Load the `vroom()` library. Load one data set into `IHME2010` object and use the `id` argument to add the file name to the data frame.  Use **file_name** as the argument's value. Load the file spec into a variable called `spec`, using the `spec()` command.
+
+```{r, eval = eval_pop, message=FALSE}
+library(vroom)
+IHME2010 <- vroom("data/IHME_GBD_2019_POP_2010_2019_SYA/IHME_GBD_2019_POP_SYA_2010_Y2021M01D28.CSV", id = "file_name")
+spec <- spec(IHME2010)
+spec
+```
+
+### Explore dataset
+
+Explore dataset and it's variables by `summary()`
+
+```{r, eval = eval_pop}
+summary(IHME2010)
+rm(IHME2010) # Remove dataset from memory
+```
+
+
+### Load and modify multiple files
+
+Load the `fs` and `dplyr` libraries. Load to a variable named `files` list files in the **./data/** folder using the `dir_ls()` function, use the `glob` argument to pass a wildcard to list CSV files only. 
+
+```{r, eval = eval_pop}
+library(fs)
+library(dplyr)
+loc <- ("data/IHME_GBD_2019_POP_2010_2019_SYA/")
+files <- dir_ls(loc, glob = "*.CSV")
+files
+```
+
+Group `population` by `location_name, year_id, sex_name, age_group_name, file_name` and get the total of `val` and the number of items. Name them `total_population` and `items` respectively. Name the new dataset `countries`. Define the `countries` variable as `NULL` prior to the for loop and add a `bind_rows()` step to `countries` to preserve each summarized view. Remove the `population` variable at the end of each cycle.
+
+```{r, eval = eval_pop, message=FALSE}
+countries <- NULL
+for(i in seq_along(files)) {
+  population <- vroom(files[i], id = "file_name")
+  
+  countries <- population %>% 
+    group_by(location_name, year_id, sex_name, age_group_name, age_group_id) %>% 
+    summarise(total_population = sum(val, na.rm = T)) %>% 
+    bind_rows(countries)
+  
+  rm(population)
+}
+```
+
+Preview the `countries` dataset by checking how many countries are in the dataset and calculating total population by year
+
+```{r, eval = eval_pop}
+## How many countries/locations are included?    
+length(unique(countries$location_name))
+
+## Calculate countries population by year 
+countries %>% 
+  filter(sex_name == "both") %>% 
+  group_by(location_name, year_id, sex_name) %>% 
+  summarise(pop = sum(total_population)) -> countries_population
+
+head(countries_population)
+```
+
+### Included European countries
+
+Below is a list of 51 European countries. See which of these countries are NOT included in population dataset
+
+```{r, eval = eval_pop}
+europe <- c("Albania","Andorra","Armenia","Austria","Azerbaijan","Belarus","Belgium","Bosnia and Herzegovina","Bulgaria","Croatia","Cyprus","Czechia","Denmark","Estonia","Finland","France","Georgia","Germany","Greece","Hungary","Iceland","Ireland","Italy","Kazakhstan","Latvia","Lithuania","Luxembourg","Malta","Republic of Moldova","Monaco","Montenegro","Netherlands","North Macedonia","Norway","Poland","Portugal","Romania","Russian Federation","San Marino","Serbia","Slovakia","Slovenia","Spain","Sweden","Switzerland","Turkey","Ukraine","United Kingdom")
+```
+
+Create new dataset which has only europe countries and compare which are not included
+
+```{r, eval = eval_pop}
+eucountries <- countries %>% 
+  filter(location_name %in% europe)
+
+## How many European countries are included in the dataset?
+length(unique(eucountries$location_name))
+
+## These countries are missing
+europe[!europe %in% eucountries$location_name]
+```
+
+### Europe total population in 2019
+
+Calculate Total population in 2019 of selected European countries
+
+```{r, eval = eval_pop}
+eucountries %>% 
+  filter(sex_name == "both" & year_id == 2019 & location_name %in% europe) %>% 
+  group_by(2019) %>%
+  summarise(pop = sum(total_population)) -> total_population_2019
+
+total_population_2019
+```
+
+
+### PLOT: Finland population 2019
+
+Draw a plot of Finland population in 2019 by age and gender
+
+```{r, eval = eval_pop}
+## re-adjust age_group variable of the population for filtering
+eucountries$age_group <- eucountries$age_group_name
+eucountries$age_group[eucountries$age_group == "<1 year"] <- 0
+eucountries$age_group[eucountries$age_group == "95 plus"] <- 95
+eucountries$age_group <- as.integer(eucountries$age_group)
+
+## plot age distribution
+library(ggplot2)
+ggplot(data = eucountries[eucountries$sex_name %in% c("female", "male") & eucountries$location_name == "Finland" & eucountries$year_id == 2019, ]) +
+  geom_bar(aes(x=age_group, y=total_population, fill=sex_name), stat = "identity") + 
+  labs(x="age", y="freq", title="Finland population 2019")
+```
+
+
+### PLOT: European countries population
+
+Filter and group dataset to get total population by years and countries
+
+```{r, eval = eval_pop}
+eucountries %>% 
+  filter(sex_name == "both" & year_id == 2019) %>% 
+  group_by(location_name, year_id) %>% 
+  summarise(total_population = sum(total_population)) -> populations
+populations$year_id <- as.integer(populations$year_id)
+```
+
+Draw ordered population bar diagram of the populations
+
+```{r, eval = eval_pop}
+options(scipen = 999)
+ggplot(data = populations) +
+  geom_bar(aes(x=reorder(location_name,total_population), y=total_population, group=year_id), position="dodge", stat="identity") +
+  coord_flip() +
+  labs(x="", y="population", title = "Countries total population in 2019")
+```
+
+
+
+```{r, eval = eval_pop, include=FALSE}
+rm(countries)
+rm(countries_population)
+```
+
+
+
+## IHME dataset
+
+```{r, include = FALSE, eval=eval_IHME}
+library(vroom)
+library(fs)
+library(purrr)
+library(dplyr)
+```
+
+
+Exploring IHME dataset which is publicly available at [GBD webpage](http://ghdx.healthdata.org/gbd-results-tool?params=gbd-api-2019-public/706a4f69209d31dd557b6bc2b787a938). Dataset has prevalences and incidences of different disease by countries, age group and sex. You can download full dataset by this [link](http://ghdx.healthdata.org/gbd-results-tool?params=gbd-api-2019-permalink/e77f5cf5b1b5b77568d115f4878cd19b).
+
+
+### Load few datasets
+
+Firstly load libraries 
+
+```{r, eval=eval_IHME}
+library(vroom)
+library(fs)
+library(dplyr)
+```
+
+Downloaded data is stored in `data/ihmedata/`. List files under the data location by using `fs`-package and load few files
+
+```{r, eval=eval_IHME}
+files <- fs::dir_ls ("data/ihmedata/", recurse = T, glob = "*.csv")
+vroom(file = files, n_max = 1000, id = "file_name")
+```
+
+Let's find out what two datasets has using command `spec()` and `summary()`
+
+```{r, eval=eval_IHME, message=FALSE}
+d1 <- vroom(file = files[1])
+spec(d1)
+summary(d1)
+```
+
+```{r, eval=eval_IHME}
+d2 <- vroom(file = files[2])
+spec(d2)
+summary(d2)
+```
+
+Locations on each datasets
+
+```{r, eval=eval_IHME}
+length(unique(d1$location_name))
+length(unique(d2$location_name))
+```
+
+Causes on each datasets
+
+```{r, eval=eval_IHME}
+length(unique(d1$cause_name))
+length(unique(d2$cause_name))
+```
+
+```{r, eval=eval_IHME}
+d1 %>% 
+  group_by(location_name, cause_name) %>% 
+  summarise(n = n(),
+            val=sum(val)) %>% 
+  arrange(n) %>% 
+  tail(10)
+
+d2 %>% 
+  group_by(location_name, cause_name) %>% 
+  summarise(n = n(),
+            val=sum(val)) %>% 
+  arrange(n) %>% 
+  tail(10)
+```
+
+
+### Load all datasets
+
+Load all datasets to one object and filter only Europe countries 
+
+```{r, eval=eval_IHME, warning=FALSE}
+europe <- c("Albania","Andorra","Armenia","Austria","Azerbaijan","Belarus","Belgium","Bosnia and Herzegovina","Bulgaria","Croatia","Cyprus","Czechia","Denmark","Estonia","Finland","France","Georgia","Germany","Greece","Hungary","Iceland","Ireland","Italy","Kazakhstan","Kosovo","Latvia","Liechtenstein","Lithuania","Luxembourg","Malta","Moldova","Monaco","Montenegro","Netherlands","North Macedonia","Norway","Poland","Portugal","Romania","Russian Federation","San Marino","Serbia","Slovakia","Slovenia","Spain","Sweden","Switzerland","Turkey","Ukraine","United Kingdom","Vatican City")
+
+ihme <- NULL
+for(i in seq_along(files)) {
+  ihme <- ihme %>% 
+    rbind(vroom(files[i], id = "file_name")) %>% 
+    filter(location_name %in% europe)
+}
+
+```
+
+
+### Summary 
+
+Get basic info of the dataset
+
+```{r, eval=eval_IHME}
+summary(ihme)
+```
+
+
+```{r, eval=eval_IHME, include=FALSE}
+rm(list=c("d1","d2"))
+```
+

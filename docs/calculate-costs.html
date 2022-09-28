@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>6 Calculate costs | Sleep Revolution: Sleep Apnea Cost</title>
+  <meta name="description" content="6 Calculate costs | Sleep Revolution: Sleep Apnea Cost" />
+  <meta name="generator" content="bookdown 0.24 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="6 Calculate costs | Sleep Revolution: Sleep Apnea Cost" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="6 Calculate costs | Sleep Revolution: Sleep Apnea Cost" />
+  
+  
+  
+
+<meta name="author" content="Jani Miettinen, Ida Alakörkkö, Anna But &amp; Reijo Sund" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="create-datas-for-the-calculator.html"/>
+<link rel="next" href="results.html"/>
+<script src="book_assets/header-attrs-2.11/header-attrs.js"></script>
+<script src="book_assets/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="book_assets/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="book_assets/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="book_assets/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="book_assets/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="book_assets/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="book_assets/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="book_assets/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="book_assets/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="book_assets/anchor-sections-1.0.1/anchor-sections.js"></script>
+<script src="book_assets/htmlwidgets-1.5.4/htmlwidgets.js"></script>
+<link href="book_assets/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet" />
+<script src="book_assets/datatables-binding-0.19/datatables.js"></script>
+<link href="book_assets/dt-core-1.10.20/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="book_assets/dt-core-1.10.20/css/jquery.dataTables.extra.css" rel="stylesheet" />
+<script src="book_assets/dt-core-1.10.20/js/jquery.dataTables.min.js"></script>
+<link href="book_assets/crosstalk-1.1.1/css/crosstalk.css" rel="stylesheet" />
+<script src="book_assets/crosstalk-1.1.1/js/crosstalk.min.js"></script>
+<link href="book_assets/nouislider-7.0.10/jquery.nouislider.min.css" rel="stylesheet" />
+<script src="book_assets/nouislider-7.0.10/jquery.nouislider.min.js"></script>
+<link href="book_assets/selectize-0.12.0/selectize.bootstrap3.css" rel="stylesheet" />
+<script src="book_assets/selectize-0.12.0/selectize.min.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Estimating costs of sleep apnea</a></li>
+<li class="chapter" data-level="2" data-path="data.html"><a href="data.html"><i class="fa fa-check"></i><b>2</b> Data</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="data.html"><a href="data.html#population"><i class="fa fa-check"></i><b>2.1</b> Population</a>
+<ul>
+<li class="chapter" data-level="2.1.1" data-path="data.html"><a href="data.html#load-data-into-r"><i class="fa fa-check"></i><b>2.1.1</b> Load data into R</a></li>
+<li class="chapter" data-level="2.1.2" data-path="data.html"><a href="data.html#explore-dataset"><i class="fa fa-check"></i><b>2.1.2</b> Explore dataset</a></li>
+<li class="chapter" data-level="2.1.3" data-path="data.html"><a href="data.html#load-and-modify-multiple-files"><i class="fa fa-check"></i><b>2.1.3</b> Load and modify multiple files</a></li>
+<li class="chapter" data-level="2.1.4" data-path="data.html"><a href="data.html#included-european-countries"><i class="fa fa-check"></i><b>2.1.4</b> Included European countries</a></li>
+<li class="chapter" data-level="2.1.5" data-path="data.html"><a href="data.html#europe-total-population-in-2019"><i class="fa fa-check"></i><b>2.1.5</b> Europe total population in 2019</a></li>
+<li class="chapter" data-level="2.1.6" data-path="data.html"><a href="data.html#plot-finland-population-2019"><i class="fa fa-check"></i><b>2.1.6</b> PLOT: Finland population 2019</a></li>
+<li class="chapter" data-level="2.1.7" data-path="data.html"><a href="data.html#plot-european-countries-population"><i class="fa fa-check"></i><b>2.1.7</b> PLOT: European countries population</a></li>
+</ul></li>
+<li class="chapter" data-level="2.2" data-path="data.html"><a href="data.html#ihme-dataset"><i class="fa fa-check"></i><b>2.2</b> IHME dataset</a>
+<ul>
+<li class="chapter" data-level="2.2.1" data-path="data.html"><a href="data.html#load-few-datasets"><i class="fa fa-check"></i><b>2.2.1</b> Load few datasets</a></li>
+<li class="chapter" data-level="2.2.2" data-path="data.html"><a href="data.html#load-all-datasets"><i class="fa fa-check"></i><b>2.2.2</b> Load all datasets</a></li>
+<li class="chapter" data-level="2.2.3" data-path="data.html"><a href="data.html#summary"><i class="fa fa-check"></i><b>2.2.3</b> Summary</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="create-the-database.html"><a href="create-the-database.html"><i class="fa fa-check"></i><b>3</b> Create the database</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="create-the-database.html"><a href="create-the-database.html#population-dataset"><i class="fa fa-check"></i><b>3.1</b> Population dataset</a></li>
+<li class="chapter" data-level="3.2" data-path="create-the-database.html"><a href="create-the-database.html#ihme-dataset-1"><i class="fa fa-check"></i><b>3.2</b> IHME dataset</a></li>
+<li class="chapter" data-level="3.3" data-path="create-the-database.html"><a href="create-the-database.html#calculator-files"><i class="fa fa-check"></i><b>3.3</b> Calculator files</a></li>
+<li class="chapter" data-level="3.4" data-path="create-the-database.html"><a href="create-the-database.html#moving-data-to-duckdb"><i class="fa fa-check"></i><b>3.4</b> Moving data to duckdb</a></li>
+<li class="chapter" data-level="3.5" data-path="create-the-database.html"><a href="create-the-database.html#transform-to-parquet"><i class="fa fa-check"></i><b>3.5</b> Transform to parquet</a></li>
+<li class="chapter" data-level="3.6" data-path="create-the-database.html"><a href="create-the-database.html#extra-duckdb-basics-and-dbi"><i class="fa fa-check"></i><b>3.6</b> EXTRA: duckdb basics (and DBI)</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html"><i class="fa fa-check"></i><b>4</b> Explorative Data Analysis</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#countries-in-dataset"><i class="fa fa-check"></i><b>4.1</b> Countries in dataset</a></li>
+<li class="chapter" data-level="4.2" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#dataset-unique-values"><i class="fa fa-check"></i><b>4.2</b> Dataset unique values</a>
+<ul>
+<li class="chapter" data-level="4.2.1" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#measure_name"><i class="fa fa-check"></i><b>4.2.1</b> measure_name</a></li>
+<li class="chapter" data-level="4.2.2" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#sex_name"><i class="fa fa-check"></i><b>4.2.2</b> sex_name</a></li>
+<li class="chapter" data-level="4.2.3" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#age_name"><i class="fa fa-check"></i><b>4.2.3</b> age_name</a></li>
+<li class="chapter" data-level="4.2.4" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#metric_name"><i class="fa fa-check"></i><b>4.2.4</b> metric_name</a></li>
+<li class="chapter" data-level="4.2.5" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#year"><i class="fa fa-check"></i><b>4.2.5</b> year</a></li>
+<li class="chapter" data-level="4.2.6" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#cause_name"><i class="fa fa-check"></i><b>4.2.6</b> cause_name</a></li>
+</ul></li>
+<li class="chapter" data-level="4.3" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#calculator-datas"><i class="fa fa-check"></i><b>4.3</b> Calculator datas</a></li>
+<li class="chapter" data-level="4.4" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#plot-finland-population-2019-1"><i class="fa fa-check"></i><b>4.4</b> PLOT: Finland population 2019</a></li>
+<li class="chapter" data-level="4.5" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#plot-european-countries-population-1"><i class="fa fa-check"></i><b>4.5</b> PLOT: European countries population</a></li>
+<li class="chapter" data-level="4.6" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#table-prevalences"><i class="fa fa-check"></i><b>4.6</b> TABLE: Prevalences</a></li>
+<li class="chapter" data-level="4.7" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#table-incidences"><i class="fa fa-check"></i><b>4.7</b> TABLE: Incidences</a></li>
+<li class="chapter" data-level="4.8" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#table-deaths"><i class="fa fa-check"></i><b>4.8</b> TABLE: Deaths</a></li>
+<li class="chapter" data-level="4.9" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#table-prevalences-per-countries"><i class="fa fa-check"></i><b>4.9</b> TABLE: Prevalences per countries</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="create-datas-for-the-calculator.html"><a href="create-datas-for-the-calculator.html"><i class="fa fa-check"></i><b>5</b> Create datas for the calculator</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="create-datas-for-the-calculator.html"><a href="create-datas-for-the-calculator.html#table-prevalences-1"><i class="fa fa-check"></i><b>5.1</b> Table: prevalences</a></li>
+<li class="chapter" data-level="5.2" data-path="create-datas-for-the-calculator.html"><a href="create-datas-for-the-calculator.html#save-data-to-new-database"><i class="fa fa-check"></i><b>5.2</b> Save data to new database</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="calculate-costs.html"><a href="calculate-costs.html"><i class="fa fa-check"></i><b>6</b> Calculate costs</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="calculate-costs.html"><a href="calculate-costs.html#per-country"><i class="fa fa-check"></i><b>6.1</b> Per Country</a></li>
+<li class="chapter" data-level="6.2" data-path="calculate-costs.html"><a href="calculate-costs.html#per-patient"><i class="fa fa-check"></i><b>6.2</b> Per Patient</a></li>
+<li class="chapter" data-level="6.3" data-path="calculate-costs.html"><a href="calculate-costs.html#table-sleep-apnea-costs"><i class="fa fa-check"></i><b>6.3</b> TABLE: Sleep Apnea costs</a></li>
+<li class="chapter" data-level="6.4" data-path="calculate-costs.html"><a href="calculate-costs.html#save-dataset"><i class="fa fa-check"></i><b>6.4</b> Save dataset</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="results.html"><a href="results.html"><i class="fa fa-check"></i><b>7</b> Results</a>
+<ul>
+<li class="chapter" data-level="7.0.1" data-path="results.html"><a href="results.html#direct-costs"><i class="fa fa-check"></i><b>7.0.1</b> Direct costs</a></li>
+<li class="chapter" data-level="7.0.2" data-path="results.html"><a href="results.html#direct-non-healthcare-costs"><i class="fa fa-check"></i><b>7.0.2</b> Direct non-healthcare costs</a></li>
+<li class="chapter" data-level="7.0.3" data-path="results.html"><a href="results.html#productivity-loss-costs"><i class="fa fa-check"></i><b>7.0.3</b> Productivity loss costs</a></li>
+<li class="chapter" data-level="7.1" data-path="results.html"><a href="results.html#more-plots"><i class="fa fa-check"></i><b>7.1</b> More plots</a>
+<ul>
+<li class="chapter" data-level="7.1.1" data-path="results.html"><a href="results.html#leaflet-map"><i class="fa fa-check"></i><b>7.1.1</b> Leaflet map</a></li>
+<li class="chapter" data-level="7.1.2" data-path="results.html"><a href="results.html#another-interactive-example"><i class="fa fa-check"></i><b>7.1.2</b> Another interactive example</a></li>
+<li class="chapter" data-level="7.1.3" data-path="results.html"><a href="results.html#base-map"><i class="fa fa-check"></i><b>7.1.3</b> BASE MAP</a></li>
+</ul></li>
+<li class="chapter" data-level="7.2" data-path="results.html"><a href="results.html#tables-cost-per-patient"><i class="fa fa-check"></i><b>7.2</b> TABLES: cost per patient</a></li>
+<li class="chapter" data-level="7.3" data-path="results.html"><a href="results.html#tables-detailed-cost-per-patient"><i class="fa fa-check"></i><b>7.3</b> TABLES: detailed cost per patient</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="side-project.html"><a href="side-project.html"><i class="fa fa-check"></i><b>8</b> Side project</a></li>
+<li class="chapter" data-level="9" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i><b>9</b> References</a></li>
+<li class="chapter" data-level="10" data-path="next-task.html"><a href="next-task.html"><i class="fa fa-check"></i><b>10</b> Next task?</a>
+<ul>
+<li class="chapter" data-level="10.1" data-path="next-task.html"><a href="next-task.html#shiny-app-todo-ideas"><i class="fa fa-check"></i><b>10.1</b> Shiny App &amp; todo ideas</a></li>
+<li class="chapter" data-level="10.2" data-path="next-task.html"><a href="next-task.html#testing"><i class="fa fa-check"></i><b>10.2</b> testing</a></li>
+<li class="chapter" data-level="10.3" data-path="next-task.html"><a href="next-task.html#web-page-and-shiny"><i class="fa fa-check"></i><b>10.3</b> web page and shiny</a></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Sleep Revolution: Sleep Apnea Cost</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="calculate-costs" class="section level1" number="6">
+<h1><span class="header-section-number">6</span> Calculate costs</h1>
+<p>Next we are going to calculate sleep apnea costs to all countries. Formulas to estimate sleep apnea costs are from <strong>TODO SOURCE</strong> &lt;&gt;.</p>
+<p>Firstly open a database connection. We need two datasets OSA dataset <code>slapnea</code> for calculating population absolute values and <code>prevalences</code> dataset which we created in last chapter.</p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="calculate-costs.html#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(duckdb)</span>
+<span id="cb44-2"><a href="calculate-costs.html#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(arrow)</span>
+<span id="cb44-3"><a href="calculate-costs.html#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb44-4"><a href="calculate-costs.html#cb44-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-5"><a href="calculate-costs.html#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Reads Parquet File to an Arrow Table</span></span>
+<span id="cb44-6"><a href="calculate-costs.html#cb44-6" aria-hidden="true" tabindex="-1"></a>arrow_slapnea <span class="ot">&lt;-</span> arrow<span class="sc">::</span><span class="fu">read_parquet</span>(<span class="st">&quot;data/parquet/3_slapnea.parquet&quot;</span>, <span class="at">as_data_frame =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb44-7"><a href="calculate-costs.html#cb44-7" aria-hidden="true" tabindex="-1"></a>arrow_prevalences <span class="ot">&lt;-</span> arrow<span class="sc">::</span><span class="fu">read_parquet</span>(<span class="st">&quot;data/parquet_prevalences/0_prevalences.parquet&quot;</span>, <span class="at">as_data_frame =</span> <span class="cn">FALSE</span>) </span>
+<span id="cb44-8"><a href="calculate-costs.html#cb44-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-9"><a href="calculate-costs.html#cb44-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-10"><a href="calculate-costs.html#cb44-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Gets Database Connection</span></span>
+<span id="cb44-11"><a href="calculate-costs.html#cb44-11" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(duckdb<span class="sc">::</span><span class="fu">duckdb</span>())</span>
+<span id="cb44-12"><a href="calculate-costs.html#cb44-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-13"><a href="calculate-costs.html#cb44-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Registers arrow table as a DuckDB view</span></span>
+<span id="cb44-14"><a href="calculate-costs.html#cb44-14" aria-hidden="true" tabindex="-1"></a>arrow<span class="sc">::</span><span class="fu">to_duckdb</span>(arrow_slapnea, <span class="at">table_name =</span> <span class="st">&quot;slapnea&quot;</span>, <span class="at">con =</span> con)</span></code></pre></div>
+<pre><code>## # Source:   table&lt;slapnea&gt; [?? x 4]
+## # Database: duckdb_connection
+##   var      label                gender  rate
+##   &lt;chr&gt;    &lt;chr&gt;                &lt;chr&gt;  &lt;dbl&gt;
+## 1 Mild     Mild (5≤AHI&lt;15)      Female 0.374
+## 2 Moderate Moderate (15≤AHI&lt;30) Female 0.125
+## 3 Severe   Severe (AHI≥30)      Female 0.109
+## 4 Mild     Mild (5≤AHI&lt;15)      Male   0.341
+## 5 Moderate Moderate (15≤AHI&lt;30  Male   0.199
+## 6 Severe   Severe (AHI≥30)      Male   0.298</code></pre>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="calculate-costs.html#cb46-1" aria-hidden="true" tabindex="-1"></a>arrow<span class="sc">::</span><span class="fu">to_duckdb</span>(arrow_prevalences, <span class="at">table_name =</span> <span class="st">&quot;prevalences&quot;</span>, <span class="at">con =</span> con)</span></code></pre></div>
+<pre><code>## # Source:   table&lt;prevalences&gt; [?? x 14]
+## # Database: duckdb_connection
+##    location_name cause_id cause_name          condition        PAF prevalence_base
+##    &lt;chr&gt;            &lt;dbl&gt; &lt;chr&gt;               &lt;chr&gt;          &lt;dbl&gt;           &lt;dbl&gt;
+##  1 Netherlands         NA &lt;NA&gt;                All-cause mor… 0.075         NA     
+##  2 Netherlands         NA &lt;NA&gt;                Cardiovascula… 0.227         NA     
+##  3 Netherlands       1029 Total cancers       Cancer Overall 0.097          0.0695
+##  4 Netherlands         NA &lt;NA&gt;                Diabetic reti… 0.207          0.026 
+##  5 Netherlands        998 Chronic kidney dis… Diabetic kidn… 0.135          0.0245
+##  6 Netherlands        976 Diabetes mellitus … Type 2 diabet… 0.145          0.192 
+##  7 Netherlands        619 Endocrine, metabol… Metabolic syn… 0.164          0.184 
+##  8 Netherlands         NA &lt;NA&gt;                Metabolic syn… 0.232         NA     
+##  9 Netherlands         NA &lt;NA&gt;                Erectile dysf… 0.228          0.1   
+## 10 Netherlands         NA &lt;NA&gt;                Female sexual… 0.153          0.29  
+## # … with more rows, and 8 more variables: prevalence_ihme &lt;dbl&gt;,
+## #   prevalence &lt;dbl&gt;, direct_healtcare_cost_mean &lt;dbl&gt;,
+## #   direct_nonhealthcare_cost_mean &lt;dbl&gt;, productivity_losses_cost_mean &lt;dbl&gt;,
+## #   population_total &lt;dbl&gt;, population_female &lt;dbl&gt;, population_male &lt;dbl&gt;</code></pre>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="calculate-costs.html#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Slapnea OSA absolute base data</span></span>
+<span id="cb48-2"><a href="calculate-costs.html#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tbl</span>(con, <span class="st">&quot;slapnea&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb48-3"><a href="calculate-costs.html#cb48-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collect</span>() <span class="ot">-&gt;</span> slapnea</span></code></pre></div>
+<div id="per-country" class="section level2" number="6.1">
+<h2><span class="header-section-number">6.1</span> Per Country</h2>
+<p>Formulas to total costs are</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="calculate-costs.html#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tbl</span>(con, <span class="st">&quot;prevalences&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb49-2"><a href="calculate-costs.html#cb49-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb49-3"><a href="calculate-costs.html#cb49-3" aria-hidden="true" tabindex="-1"></a>    <span class="do">## Formulas</span></span>
+<span id="cb49-4"><a href="calculate-costs.html#cb49-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">prevalent_cases =</span> prevalence <span class="sc">*</span> population_total,</span>
+<span id="cb49-5"><a href="calculate-costs.html#cb49-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">prevalent_cases_influenced_osa =</span> PAF <span class="sc">*</span> prevalent_cases,</span>
+<span id="cb49-6"><a href="calculate-costs.html#cb49-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">direct_cost =</span> prevalent_cases_influenced_osa <span class="sc">*</span> direct_healtcare_cost_mean,</span>
+<span id="cb49-7"><a href="calculate-costs.html#cb49-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">direct_non_healthcare_cost =</span> prevalent_cases_influenced_osa <span class="sc">*</span> direct_nonhealthcare_cost_mean,</span>
+<span id="cb49-8"><a href="calculate-costs.html#cb49-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">productivity_lost_cost =</span> prevalent_cases_influenced_osa <span class="sc">*</span> productivity_losses_cost_mean,</span>
+<span id="cb49-9"><a href="calculate-costs.html#cb49-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_costs =</span> direct_cost <span class="sc">+</span> direct_non_healthcare_cost <span class="sc">+</span> productivity_lost_cost</span>
+<span id="cb49-10"><a href="calculate-costs.html#cb49-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb49-11"><a href="calculate-costs.html#cb49-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collect</span>() <span class="ot">-&gt;</span> slapnea_costs</span></code></pre></div>
+</div>
+<div id="per-patient" class="section level2" number="6.2">
+<h2><span class="header-section-number">6.2</span> Per Patient</h2>
+<p>Formulas for per patient costs are</p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb50-1"><a href="calculate-costs.html#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="do">## </span><span class="al">TODO</span><span class="do">: CHECK!! this doesnt match to excel values, calculation needs to be checked. !!! Population difference !!!!</span></span>
+<span id="cb50-2"><a href="calculate-costs.html#cb50-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-3"><a href="calculate-costs.html#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="do">## Calculate sums of direct, non healthcare and productivity lost costs.</span></span>
+<span id="cb50-4"><a href="calculate-costs.html#cb50-4" aria-hidden="true" tabindex="-1"></a>slapnea_costs <span class="sc">%&gt;%</span> </span>
+<span id="cb50-5"><a href="calculate-costs.html#cb50-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(location_name, population_female, population_male) <span class="sc">%&gt;%</span> </span>
+<span id="cb50-6"><a href="calculate-costs.html#cb50-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">direct_cost =</span> <span class="fu">sum</span>(direct_cost, <span class="at">na.rm =</span> T),</span>
+<span id="cb50-7"><a href="calculate-costs.html#cb50-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">direct_non_healthcare_cost =</span> <span class="fu">sum</span>(direct_non_healthcare_cost, <span class="at">na.rm =</span> T),</span>
+<span id="cb50-8"><a href="calculate-costs.html#cb50-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">productivity_lost_cost =</span> <span class="fu">sum</span>(productivity_lost_cost, <span class="at">na.rm =</span> T)) <span class="ot">-&gt;</span> summary_slapnea_costs</span></code></pre></div>
+<pre><code>## `summarise()` has grouped output by &#39;location_name&#39;, &#39;population_female&#39;. You can override using the `.groups` argument.</code></pre>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="calculate-costs.html#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Calculate per patient cost</span></span>
+<span id="cb52-2"><a href="calculate-costs.html#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="do">## by calculating absolute values (population) using OSA table (slapnea)</span></span>
+<span id="cb52-3"><a href="calculate-costs.html#cb52-3" aria-hidden="true" tabindex="-1"></a>summary_slapnea_costs <span class="sc">%&gt;%</span> </span>
+<span id="cb52-4"><a href="calculate-costs.html#cb52-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb52-5"><a href="calculate-costs.html#cb52-5" aria-hidden="true" tabindex="-1"></a>    <span class="do">## Formulas</span></span>
+<span id="cb52-6"><a href="calculate-costs.html#cb52-6" aria-hidden="true" tabindex="-1"></a>    <span class="do">## </span><span class="al">TODO</span><span class="do">: tarkista </span></span>
+<span id="cb52-7"><a href="calculate-costs.html#cb52-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">absolute_value_severe_moderate =</span> ( (population_female <span class="sc">*</span> slapnea<span class="sc">$</span>rate[slapnea<span class="sc">$</span>var <span class="sc">==</span> <span class="st">&quot;Moderate&quot;</span> <span class="sc">&amp;</span> slapnea<span class="sc">$</span>gender <span class="sc">==</span> <span class="st">&quot;Female&quot;</span>]) <span class="sc">+</span> (population_female <span class="sc">*</span> slapnea<span class="sc">$</span>rate[slapnea<span class="sc">$</span>var <span class="sc">==</span> <span class="st">&quot;Severe&quot;</span> <span class="sc">&amp;</span> slapnea<span class="sc">$</span>gender <span class="sc">==</span> <span class="st">&quot;Female&quot;</span>]) <span class="sc">+</span> (population_male <span class="sc">*</span> slapnea<span class="sc">$</span>rate[slapnea<span class="sc">$</span>var <span class="sc">==</span> <span class="st">&quot;Moderate&quot;</span> <span class="sc">&amp;</span> slapnea<span class="sc">$</span>gender <span class="sc">==</span> <span class="st">&quot;Male&quot;</span>]) <span class="sc">+</span> (population_male <span class="sc">*</span> slapnea<span class="sc">$</span>rate[slapnea<span class="sc">$</span>var <span class="sc">==</span> <span class="st">&quot;Severe&quot;</span> <span class="sc">&amp;</span> slapnea<span class="sc">$</span>gender <span class="sc">==</span> <span class="st">&quot;Male&quot;</span>])),</span>
+<span id="cb52-8"><a href="calculate-costs.html#cb52-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">absolute_value_mild =</span> ( population_female <span class="sc">*</span> slapnea<span class="sc">$</span>rate[slapnea<span class="sc">$</span>var <span class="sc">==</span> <span class="st">&quot;Mild&quot;</span> <span class="sc">&amp;</span> slapnea<span class="sc">$</span>gender <span class="sc">==</span> <span class="st">&quot;Female&quot;</span>] <span class="sc">+</span> population_male <span class="sc">*</span> slapnea<span class="sc">$</span>rate[slapnea<span class="sc">$</span>var <span class="sc">==</span> <span class="st">&quot;Mild&quot;</span> <span class="sc">&amp;</span> slapnea<span class="sc">$</span>gender <span class="sc">==</span> <span class="st">&quot;Male&quot;</span>] ),</span>
+<span id="cb52-9"><a href="calculate-costs.html#cb52-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">patient_direct_cost =</span> direct_cost <span class="sc">/</span> absolute_value_severe_moderate,</span>
+<span id="cb52-10"><a href="calculate-costs.html#cb52-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">patient_nondirect_cost =</span> direct_non_healthcare_cost <span class="sc">/</span> absolute_value_mild,</span>
+<span id="cb52-11"><a href="calculate-costs.html#cb52-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">patient_productivity_cost =</span> productivity_lost_cost <span class="sc">/</span> absolute_value_mild,</span>
+<span id="cb52-12"><a href="calculate-costs.html#cb52-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">patient_total_cost =</span> patient_direct_cost <span class="sc">+</span> patient_nondirect_cost <span class="sc">+</span> patient_productivity_cost</span>
+<span id="cb52-13"><a href="calculate-costs.html#cb52-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="ot">-&gt;</span> summary_slapnea_costs</span></code></pre></div>
+<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="calculate-costs.html#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(con, <span class="at">shutdown=</span><span class="cn">TRUE</span>)</span></code></pre></div>
+</div>
+<div id="table-sleep-apnea-costs" class="section level2" number="6.3">
+<h2><span class="header-section-number">6.3</span> TABLE: Sleep Apnea costs</h2>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="calculate-costs.html#cb54-1" aria-hidden="true" tabindex="-1"></a>DT<span class="sc">::</span><span class="fu">datatable</span>(summary_slapnea_costs, <span class="at">rownames =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<div id="htmlwidget-1b55d4e20236af49cbf3" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-1b55d4e20236af49cbf3">{"x":{"filter":"none","vertical":false,"data":[["Albania","Andorra","Armenia","Austria","Azerbaijan","Belarus","Belgium","Bosnia and Herzegovina","Bulgaria","Croatia","Cyprus","Czechia","Denmark","Estonia","Finland","France","Georgia","Germany","Greece","Hungary","Iceland","Ireland","Italy","Kazakhstan","Latvia","Lithuania","Luxembourg","Malta","Monaco","Montenegro","Netherlands","North Macedonia","Norway","Poland","Portugal","Republic of Moldova","Romania","Russian Federation","San Marino","Serbia","Slovakia","Slovenia","Spain","Sweden","Switzerland","Turkey","Ukraine","United Kingdom"],[1042813.83664872,32263.3622892552,1187751.46632207,3390811.52093681,3933114.80277764,3828210.23535748,4236476.3797455,1325491.9134839,2698595.42029965,1642202.11854235,520845.167217243,4032755.93583878,2163011.74831243,499737.557126058,2053159.58284029,24537956.814765,5552040.69044032,31433009.1127722,3912075.07598462,3839890.08448987,125138.559550062,1817293.88263313,22872465.9288191,6683583.72512059,746181.017889667,1106308.65134093,234682.741487775,167112.325177435,14285.4583662706,239735.161369938,6486584.82889167,836270.849533703,1965028.94249582,15159651.203038,4213876.56458243,1504016.70949479,7392295.87404994,59015706.9817374,12836.6345074708,3345083.31022772,2145490.52338544,769297.336622483,17494252.0963186,3658670.6925687,3301668.98708978,30973560.6384308,18225956.5264342,25024324.9626156],[1042863.41070783,34752.4779225578,1079711.49070659,3394533.93652268,3819780.70065995,3421041.95349104,4223220.29916392,1281097.96161999,2633684.83888278,1605857.42756405,506226.904870546,4042870.41039291,2186397.03967836,471077.687997798,2072446.58622637,23633243.9845487,5178240.52422078,32324875.1685943,3775362.29286603,3628162.31296397,130217.883572798,1778317.11632149,22432015.9101181,6163949.03051616,670645.997226341,992897.125750733,243492.350088081,171282.203631712,13919.4580510863,235755.805469378,6518502.60304507,872540.151897231,2052158.27415903,14668700.5009229,3905756.39900834,1386625.84388468,7227513.92650893,52146272.2871356,11937.6236741461,3305156.22181838,2105265.32973433,797879.53964865,17282063.3019469,3778022.75756547,3369256.32150017,31829228.2630106,15826865.9540664,24829881.9192902],[1004216318.18188,31570361.9015114,1081808018.56969,3802374995.00708,3311701017.42348,3350710269.05509,4502736550.48888,1809905776.36155,3545099175.02746,2120149602.08949,473658244.280908,5609262640.20984,2211218646.28867,484410552.390125,2394650464.14115,22076073987.2608,2072893269.86085,40789360237.4435,4439419926.40292,4638173967.08307,114923252.923996,1686967667.94963,30496166945.6931,5793654611.47641,803961121.355492,1135556829.86543,236021444.838099,188289536.183595,18747562.1081749,279655021.220052,6548563317.70969,1031986634.65252,2243659652.02867,15065944486.0735,4924880365.51933,1306745733.69453,8477837659.72181,51632284619.4734,13199092.2435185,4380382251.89433,2357660996.38055,911437926.986347,19805956310.374,4055586900.98596,3117530063.2215,33952314315.366,16616496591.8033,29308254388.4451],[176318662.255373,6035429.60203444,164989478.024407,705771359.686988,490837891.518594,848088269.172562,871276374.573474,340722544.495412,911475623.602251,420334959.723548,77480522.928137,966070626.209976,461905308.696349,108512399.907026,516369541.811689,4906331023.78836,306977800.830964,7691253891.83387,943480375.052126,975953862.200211,20963364.2935724,304326187.029619,5387784430.22005,973402080.004168,196367490.152527,267353595.477975,37471565.5675613,31020919.7686186,4710561.43361266,56713953.3682238,1507335351.90165,216029845.912405,482433711.641357,2874960682.35555,927668265.19378,254797564.538701,1949924713.23227,13169910910.7882,2810260.76453726,974726224.074082,477033391.746853,166542497.508988,3506942251.0049,919005169.746153,619475841.381014,4263147221.7583,3910779162.07411,4785906287.99323],[1286128652.75801,29605335.9858196,1354721878.93035,3070963307.52782,4203136756.91353,3307895227.9941,3819989181.92564,2163587557.58361,3091551940.98666,2070625760.46894,461011017.504903,5421791433.61965,1721453491.81608,501607233.092235,1931239417.2569,18387955402.5368,1875482959.83755,33698193964.7887,3964466714.41738,4564837331.68728,107324506.402389,1690328458.03172,32874348606.2289,6396705236.51861,763813640.178414,1063868638.55028,224048941.528266,183868830.500934,15797405.7074788,282996017.703801,5553860027.02029,1035794205.61736,1718634591.37039,16253262181.9869,5299811903.89934,1446138047.06665,8261722976.76209,55797946916.2131,11878043.7437428,4129883498.77247,2030957679.54776,954631710.90411,20401494000.1268,3453819429.26043,2815451026.73973,52842224840.4163,17362821972.5453,27590012113.0817],[762321.552897593,24821.6083031969,814550.454000542,2480533.26235099,2818779.87207796,2596059.0459587,3090275.96154491,946870.794680367,1940412.69327486,1182386.43723824,373472.540849496,2952971.48295155,1592784.07782525,351064.199302403,1510445.29573913,17487604.1549757,3872763.06210076,23420787.0911801,2791780.62733482,2701730.94931372,94000.7110703953,1309070.37534793,16500868.9346724,4627441.25984475,507917.418807673,752346.095911892,175931.459501916,124231.539296481,10260.7679090972,173268.663078846,4757556.64367405,629339.83428381,1479739.43480106,10837702.5304696,2927208.04641943,1041092.95443247,5321871.65600263,39726372.7604329,8936.77144079876,2425412.13683702,1548361.65135016,576561.70797504,12682840.4516062,2733806.25257111,2447110.93476459,23066939.6361091,12130826.2063566,18196143.3551393],[745628.797957992,23917.0924677737,812400.666735404,2425699.5811846,2773530.15516388,2598325.93416414,3024560.28803971,932588.380555394,1907361.2172511,1161780.97513418,367419.467100105,2886869.52994768,1554527.78439917,347539.337972395,1474585.96988546,17236132.0474532,3842243.23698396,22778727.8406675,2750514.62028556,2673322.24031992,91206.1195700474,1286074.04877042,16203619.6827286,4601566.93260111,507761.985744918,752337.355482509,170802.236696464,120907.241054775,10089.2966244057,170053.680017415,4648792.11364385,610301.489522561,1434706.79598167,10671736.4207509,2907852.76721567,1035341.66211573,5229300.90583423,39853753.261083,8871.63097867788,2378119.42966523,1520308.93318556,559794.126916999,12436033.8699871,2656648.59935052,2383740.60680314,22437878.5164598,12213469.031223,17826087.2704962],[1317.31329694778,1271.89026254375,1328.1043712597,1532.88611473941,1174.87039347352,1290.69108588696,1457.06616707391,1911.4601342969,1826.98205763865,1793.11055617453,1268.25453674193,1899.53159811868,1388.2726962639,1379.83466657293,1585.39370535054,1262.38413173251,535.249184270111,1741.58793547994,1590.17505993694,1716.74162013106,1222.57854877217,1288.67607098759,1848.15521330596,1252.0212113229,1582.85794419647,1509.35431982146,1341.55338395024,1515.63393040023,1827.1110188111,1613.99653146048,1376.45514455768,1639.79233227294,1516.25319921971,1390.14190911003,1682.4497225414,1255.16720493693,1593.01805975714,1299.69793443862,1476.94190580517,1806.03625477309,1522.68108314662,1580.81592027233,1561.6341138996,1483.49463213486,1273.96352120073,1471.90372242605,1369.77451569591,1610.6849575994],[236.469759132488,252.347964543211,203.088801843812,290.955798962673,176.972257036662,326.397954167895,288.067121035358,365.351479387399,477.872578805957,361.802240456727,210.877566013744,334.64298132915,297.135447389174,312.230553640651,350.179340070486,284.653831281903,79.8954625975037,337.650721569379,343.019581897068,365.071538133546,229.846027792821,236.631932135306,332.504991829872,211.537090356727,386.731373488789,355.363978047467,219.385684241084,256.567923459317,466.887000052906,333.506180886035,324.242365555072,353.972339280059,336.259445478727,269.399521221801,319.02174541046,246.099982123795,372.884396661277,330.455975488976,316.769348419863,409.872696852442,313.773984572535,297.50668951495,281.998448031611,345.926506791612,259.875524884312,189.997785157406,320.202159769385,268.477665085503],[1724.89133504534,1237.83173166681,1667.55387384681,1266.01139372259,1515.44656873045,1273.08709985155,1262.98992849684,2319.9812507798,1620.85288985913,1782.2858221876,1254.72670553762,1878.08675708247,1107.3803306008,1443.31066525792,1309.68248491264,1066.82609253123,488.121871563173,1479.3712010829,1441.3545324132,1707.55222204001,1176.72483938934,1314.33214102081,2028.82746262365,1390.11456971305,1504.2749587838,1414.08456033394,1311.74477490261,1520.74291743731,1565.75887255266,1664.156974873,1194.68883341118,1697.18446276064,1197.89952635894,1523.01945448942,1822.5860551303,1396.77374144441,1579.89052944814,1400.06755576267,1338.87937542607,1736.6173654928,1335.88485551566,1705.32641376864,1640.51450916063,1300.06634302512,1181.10629097164,2355.04550047603,1421.61264159743,1547.73235957089],[3278.67439112561,2762.06995875378,3198.74704695032,3089.85330742467,2867.28921924063,2890.1761399064,3008.1232166061,4596.7928644641,3925.70752630373,3937.19861881886,2733.85880829329,4112.2613365303,2792.78847425387,3135.3758854715,3245.25553033366,2613.86405554564,1103.26651843079,3558.60985813222,3374.54917424721,3789.36538030462,2629.14941595433,2839.64014414371,4209.48766775948,2853.67287139268,3473.86427646906,3278.80285820287,2872.68384309394,3292.94477129685,3859.75689141667,3611.65968721951,2895.38634352393,3690.94913431364,3050.41217105737,3182.56088482125,3824.05752308216,2898.04092850513,3545.79298586656,3030.22146569027,3132.5906296511,3952.52631711833,3172.33992323482,3583.64902355591,3484.14707109184,3129.48748195159,2714.94533705667,4016.94700805948,3111.58931706272,3426.8949822558]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>location_name<\/th>\n      <th>population_female<\/th>\n      <th>population_male<\/th>\n      <th>direct_cost<\/th>\n      <th>direct_non_healthcare_cost<\/th>\n      <th>productivity_lost_cost<\/th>\n      <th>absolute_value_severe_moderate<\/th>\n      <th>absolute_value_mild<\/th>\n      <th>patient_direct_cost<\/th>\n      <th>patient_nondirect_cost<\/th>\n      <th>patient_productivity_cost<\/th>\n      <th>patient_total_cost<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[1,2,3,4,5,6,7,8,9,10,11]}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="save-dataset" class="section level2" number="6.4">
+<h2><span class="header-section-number">6.4</span> Save dataset</h2>
+<p>Saving dataset to new duckdb database and creating parquet files for longer storage.</p>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="calculate-costs.html#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(duckdb)</span>
+<span id="cb55-2"><a href="calculate-costs.html#cb55-2" aria-hidden="true" tabindex="-1"></a>con <span class="ot">=</span> <span class="fu">dbConnect</span>(duckdb<span class="sc">::</span><span class="fu">duckdb</span>(), <span class="at">dbdir=</span><span class="st">&quot;./data/sleep22_calculator.duckdb&quot;</span>, <span class="at">read_only=</span><span class="cn">FALSE</span>)</span>
+<span id="cb55-3"><a href="calculate-costs.html#cb55-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(con, <span class="st">&quot;prevalences&quot;</span>, d, <span class="at">overwrite=</span><span class="cn">TRUE</span>)</span>
+<span id="cb55-4"><a href="calculate-costs.html#cb55-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(con, <span class="st">&quot;summary_slapnea_costs&quot;</span>, summary_slapnea_costs, <span class="at">overwrite=</span><span class="cn">TRUE</span>)</span>
+<span id="cb55-5"><a href="calculate-costs.html#cb55-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(con, <span class="st">&quot;slapnea_costs&quot;</span>, slapnea_costs, <span class="at">overwrite=</span><span class="cn">TRUE</span>)</span>
+<span id="cb55-6"><a href="calculate-costs.html#cb55-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-7"><a href="calculate-costs.html#cb55-7" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(con)</span>
+<span id="cb55-8"><a href="calculate-costs.html#cb55-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-9"><a href="calculate-costs.html#cb55-9" aria-hidden="true" tabindex="-1"></a>con <span class="ot">=</span> <span class="fu">dbConnect</span>(duckdb<span class="sc">::</span><span class="fu">duckdb</span>(), <span class="at">dbdir=</span><span class="st">&quot;./data/sleep22_calculator.duckdb&quot;</span>, <span class="at">read_only=</span><span class="cn">FALSE</span>)</span>
+<span id="cb55-10"><a href="calculate-costs.html#cb55-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="fu">dir.exists</span>(<span class="st">&quot;data/parquet_calculator/&quot;</span>)) fs<span class="sc">::</span><span class="fu">dir_delete</span>(<span class="st">&quot;data/parquet_calculator/&quot;</span>)</span>
+<span id="cb55-11"><a href="calculate-costs.html#cb55-11" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">dir.exists</span>(<span class="st">&quot;data/parquet_calculator/&quot;</span>)) <span class="fu">dir.create</span>(<span class="st">&quot;data/parquet_calculator/&quot;</span>)</span>
+<span id="cb55-12"><a href="calculate-costs.html#cb55-12" aria-hidden="true" tabindex="-1"></a><span class="fu">dbSendQuery</span>(con, <span class="st">&quot;EXPORT DATABASE &#39;data/parquet_calculator/&#39; (FORMAT PARQUET);&quot;</span>)</span>
+<span id="cb55-13"><a href="calculate-costs.html#cb55-13" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(<span class="at">conn =</span> con)</span></code></pre></div>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="create-datas-for-the-calculator.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="results.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="book_assets/gitbook-2.6.7/js/app.min.js"></script>
+<script src="book_assets/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="book_assets/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="book_assets/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="book_assets/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="book_assets/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="book_assets/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="book_assets/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": false,
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": null,
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "section",
+"scroll_highlight": true
+},
+"toolbar": {
+"position": "fixed"
+}
+});
+});
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,477 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+eval_prevalences_savedb = FALSE
+options(scipen = 999)
+```
+
+# Calculations
+
+In this chapter we are going to calculate prevalences and mortalities from ihme datasets. These values are needed for estimating costs of sleep apnea direct healthcare, direct nonhealthcare and productivity losses costs.
+
+
+Data is filtered:
+
+* Age: 15-74 years old / 30-69 years old
+
+* 42 countries, mainly Europe countries
+
+
+
+## Prevalences from ihme
+
+Prevalence Base values are given in `1_paf.parquet` file. Join country specific prevalences which we can get from ihme data.
+
+```{r}
+library(duckdb)
+library(arrow)
+library(dplyr)
+
+# # Reads Parquet File to an Arrow Table
+# arrow_paf <- arrow::read_parquet("data/parquet/0_paf.parquet", as_data_frame = FALSE)
+# arrow_slapnea <- arrow::read_parquet("data/parquet/1_slapnea.parquet", as_data_frame = FALSE)
+# arrow_pop <- arrow::read_parquet("data/parquet/2_pop.parquet", as_data_frame = FALSE)
+# arrow_ihme <- arrow::read_parquet("data/parquet/3_ihme.parquet", as_data_frame = FALSE)
+# 
+# # Gets Database Connection
+# con <- dbConnect(duckdb::duckdb())
+# # Registers arrow table as a DuckDB view
+# arrow::to_duckdb(arrow_slapnea, table_name = "slapnea", con = con)
+# arrow::to_duckdb(arrow_paf, table_name = "paf", con = con)
+# arrow::to_duckdb(arrow_ihme, table_name = "ihme", con = con)
+# arrow::to_duckdb(arrow_pop, table_name = "pop", con = con)
+# ## Check tables
+# duckdb::dbListTables(con)
+# duckdb::dbListFields(con, "slapnea")
+# duckdb::dbListFields(con, "paf")
+# duckdb::dbListFields(con, "ihme")
+# duckdb::dbListFields(con, "pop")
+
+con <- dbConnect(duckdb::duckdb(), dbdir="data/sleep22.duckdb", read_only=TRUE)
+```
+
+## Population from ihme
+
+Calculating 15-74 years old population of the countries
+
+```{r}
+## Both, female and male population (15-74yrs) in wide format
+library(tidyr)
+tbl(con, "pop") %>% 
+  filter(age_group > 14 & age_group < 75 & year_id == 2019) %>% 
+  group_by(location_name, sex_name) %>% 
+  summarise(pop = sum(total_population)) %>% 
+  collect() %>% 
+  pivot_wider(names_from = sex_name, values_from = pop) %>% 
+  rename(pop_both = both,
+         pop_female = female,
+         pop_male = male) -> population_age_filtered
+head(population_age_filtered)
+```
+
+
+## Prevalences from ihme dataset
+
+Calculating prevalences percentages by joining prevalences and population information
+
+```{r}
+## Get cause_id's which base values we can use to overwrite from IHME data
+tbl(con, "causes") %>% 
+  filter(type == "prevalence") %>% # TODO check if this is right!
+  select(cause_id) %>% 
+  collect() -> causes
+causes <- causes$cause_id[!is.na(causes$cause_id)]
+
+## Get number of prevalences per location and causes from IHME (age: 15-74 and sex: both)
+tbl(con, "ihme") %>% 
+  filter(cause_id %in% causes & metric_name == "Number" & age_id > 7 & age_id < 20 & sex_id == 3) %>% 
+  group_by(location_name, cause_id, cause_name) %>% 
+  summarise(prevalence_number = sum(val)) %>% 
+  arrange(location_name, cause_id) %>% 
+  collect() -> prevalences_ihme
+
+## Calculate Rates: join tables prevalences_ihme & population_age_filtered
+prevalences_ihme %>% 
+  right_join(population_age_filtered, by = "location_name") %>% 
+  mutate(prevalence = prevalence_number / pop_both)  %>% 
+  select(location_name, cause_id, cause_name, prevalence) -> prevalences_ihme
+
+head(prevalences_ihme)
+```
+
+
+
+## Mortalities from ihme
+
+Calculating mortalities for two diseases and calculating percentages by joining mortality and population information
+
+- 1023 	Other cardiovascular and circulatory diseases
+- 294  	All causes
+
+```{r}
+## Get cause_id's which base values we can use to overwrite from IHME data
+tbl(con, "causes") %>% 
+  filter(type == "mortality") %>% 
+  select(cause_id) %>% 
+  collect() -> causes
+causes <- causes$cause_id[!is.na(causes$cause_id)]
+
+## Get mortality values from ihme
+tbl(con, "ihme") %>% 
+  filter(cause_id %in% causes & measure_name == "Deaths" & metric_name == "Number" & age_id > 7 & age_id < 20 & sex_id == 3) %>% 
+  group_by(location_name, cause_id, cause_name) %>% 
+  summarise(mortality_number = sum(val)) %>% 
+  arrange(location_name, cause_id) %>% 
+  collect() -> mortalities_ihme
+
+## Calculate Rates: join tables mortalities_ihme & population_age_filtered
+mortalities_ihme %>% 
+  right_join(population_age_filtered, by = "location_name") %>% 
+  mutate(mortality = mortality_number / pop_both) %>% 
+  select(location_name, cause_id, cause_name, mortality) -> mortalities_ihme
+
+head(mortalities_ihme)
+```
+
+```{r}
+## Join mortalities and prevalance data. Rename 'mortality'/'prevalence' to 'value'.
+ihme <- prevalences_ihme %>%
+  rbind(mortalities_ihme) %>% 
+  mutate(value = ifelse(is.na(prevalence), mortality, prevalence)) %>% 
+  select(location_name, cause_id, cause_name, value) %>% 
+  arrange(location_name, cause_id)
+
+head(ihme)
+```
+
+
+
+## Combining with base values
+
+Base data (from excel) and country specific prevalences & mortalities
+
+```{r}
+## Base data. We need paf info for every country
+prevalences_base <- NULL
+for(cntry in unique(ihme$location_name)){
+  # print(cntry)
+  tbl(con, "causes") %>%  # TODO tämä muuttunut, paf, mitä taulua haetaan
+    collect() %>% 
+    mutate(location_name = cntry,
+           condition = Conditon) %>% 
+    select("location_name", 
+           "cause_id", 
+           "condition", 
+           "PAF", 
+           "prevalence_base_italy", 
+           "annual_direct_healthcare_cost",
+           "annual_direct_nonhealthcare_cost", 
+           "annual_productivity_losses_cost") %>% 
+    rbind(prevalences_base) -> prevalences_base
+}
+head(prevalences_base)
+```
+
+With base values, join new calculated prevalences/mortalities from IHME
+
+```{r}
+## Join base data and new calculated prevalences
+prevalences_final <- prevalences_base %>% 
+  left_join(ihme, by = c("location_name", "cause_id")) %>% 
+  mutate(value = ifelse(is.na(value), prevalence_base_italy, value)) %>% 
+  select(location_name, cause_id, cause_name, condition, PAF, value, prevalence_base_italy, annual_direct_healthcare_cost, annual_direct_nonhealthcare_cost, annual_productivity_losses_cost) %>% 
+  right_join(population_age_filtered, by = "location_name") ## Add the population to all rows
+
+head(prevalences_final)
+```
+
+
+## Table: prevalences and mortalities
+
+```{r}
+DT::datatable(prevalences_final, rownames = FALSE)
+```
+
+
+
+
+```{r}
+dbDisconnect(con, shutdown=TRUE)
+```
+
+
+## Save data to new database
+
+```{r}
+## Read from source excel
+tbl1 <- readxl::read_xlsx("data/osa_tables.xlsx", sheet = "causes")
+tbl2 <- readxl::read_xlsx("data/osa_tables.xlsx", sheet = "osa_armeni")
+tbl3 <- readxl::read_xlsx("data/osa_tables.xlsx", sheet = "osa_benjafield")
+```
+
+```{r, eval=eval_prevalences_savedb}
+library(duckdb)
+con = dbConnect(duckdb::duckdb(), dbdir="./data/sleep22_prevalences.duckdb", read_only=FALSE)
+dbWriteTable(con, "prevalences", prevalences_final, overwrite=TRUE)
+dbWriteTable(con, "causes", tbl1, overwrite=TRUE)
+dbWriteTable(con, "osa_armeni", tbl2, overwrite=TRUE)
+dbWriteTable(con, "osa_benjafield", tbl3, overwrite=TRUE)
+dbDisconnect(con)
+
+con = dbConnect(duckdb::duckdb(), dbdir="./data/sleep22_prevalences.duckdb", read_only=FALSE)
+if(dir.exists("data/parquet_prevalences/")) fs::dir_delete("data/parquet_prevalences/")
+if(!dir.exists("data/parquet_prevalences/")) dir.create("data/parquet_prevalences/")
+dbSendQuery(con, "EXPORT DATABASE 'data/parquet_prevalences/' (FORMAT PARQUET);")
+dbDisconnect(conn = con)
+```
+
+
+```{r setup_slapnea_costs, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+eval_costs_savedb = FALSE
+```
+
+## Costs
+
+Next we are going to calculate sleep apnea costs to all countries. Method to estimate sleep apnea cost is applied from the article [Ameni et al. (2019) *Cost-of-illness study of Obstructive Sleep Apnea Syndrome (OSAS) in Italy*](https://cergas.unibocconi.eu/sites/default/files/files/Cost-of-illness-study-of-Obstructive-Sleep-Apnea-Syndrome-%2528OSAS%2529-in-Italy_Report%25281%2529.pdf).
+
+Firstly open a database connection. We need two datasets OSA dataset `slapnea` for calculating population absolute values and `prevalences` dataset which we created in last chapter.
+
+```{r}
+library(duckdb)
+library(arrow)
+library(dplyr)
+
+
+## Using arrow -----
+# Reads Parquet File to an Arrow Table
+# arrow_slapnea <- arrow::read_parquet("data/parquet/3_slapnea.parquet", as_data_frame = FALSE)
+# arrow_prevalences <- arrow::read_parquet("data/parquet_prevalences/0_prevalences.parquet", as_data_frame = FALSE) 
+# 
+# # Gets Database Connection
+# con <- dbConnect(duckdb::duckdb())
+# 
+# # Registers arrow table as a DuckDB view
+# arrow::to_duckdb(arrow_slapnea, table_name = "slapnea", con = con)
+# arrow::to_duckdb(arrow_prevalences, table_name = "prevalences", con = con)
+# 
+
+## Using duckdb -----
+con <- dbConnect(duckdb::duckdb(), dbdir="data/sleep22_prevalences.duckdb", read_only=TRUE)
+duckdb::dbListTables(con)
+```
+
+
+```{r}
+## Slapnea OSA absolute base data
+tbl(con, "causes") %>% 
+  collect() -> causes
+```
+
+
+### Per Country
+
+Formulas to total costs are
+
+```{r}
+tbl(con, "prevalences") %>% 
+  mutate(
+    ## Formulas
+    prevalent_cases = value * pop_both,
+    prevalent_cases_influenced_osa = PAF * prevalent_cases,
+    direct_cost = prevalent_cases_influenced_osa * annual_direct_healthcare_cost,
+    direct_non_healthcare_cost = prevalent_cases_influenced_osa * annual_direct_nonhealthcare_cost,
+    productivity_lost_cost = prevalent_cases_influenced_osa * annual_productivity_losses_cost
+  ) %>% 
+  mutate(direct_cost = ifelse(is.na(direct_cost), 0 , direct_cost),
+         direct_non_healthcare_cost = ifelse(is.na(direct_non_healthcare_cost), 0 , direct_non_healthcare_cost),
+         productivity_lost_cost = ifelse(is.na(productivity_lost_cost), 0 , productivity_lost_cost),
+         total_costs = direct_cost + direct_non_healthcare_cost + productivity_lost_cost) %>% 
+  collect() -> slapnea_costs
+```
+
+
+
+### Per Patient
+
+Formulas for per patient costs are
+
+```{r}
+## Calculate sums of direct, non healthcare and productivity lost costs.
+slapnea_costs %>% 
+  group_by(location_name, pop_female, pop_male) %>% 
+  summarise(direct_cost = sum(direct_cost, na.rm = T),
+            direct_non_healthcare_cost = sum(direct_non_healthcare_cost, na.rm = T),
+            productivity_lost_cost = sum(productivity_lost_cost, na.rm = T)) -> summary_slapnea_costs
+
+## Calculate per patient cost
+## by calculating absolute values (population) using OSA table (osa_armeni)
+## TODO tämä ei ole
+osa_armeni <- tbl(con, "osa_armeni") %>% collect()
+summary_slapnea_costs %>% 
+  mutate(
+    ## Formulas
+    ## TODO: tarkista 
+    absolute_value_severe_moderate = ( (pop_female * osa_armeni$rate[osa_armeni$var == "Moderate" & osa_armeni$gender == "Female"]) + (pop_female * osa_armeni$rate[osa_armeni$var == "Severe" & osa_armeni$gender == "Female"]) + (pop_male * osa_armeni$rate[osa_armeni$var == "Moderate" & osa_armeni$gender == "Male"]) + (pop_male * osa_armeni$rate[osa_armeni$var == "Severe" & osa_armeni$gender == "Male"])),
+    absolute_value_mild = ( pop_female * osa_armeni$rate[osa_armeni$var == "Mild" & osa_armeni$gender == "Female"] + pop_male * osa_armeni$rate[osa_armeni$var == "Mild" & osa_armeni$gender == "Male"] ),
+    patient_direct_cost = direct_cost / absolute_value_severe_moderate,
+    patient_nonhealthcare_cost = direct_non_healthcare_cost / absolute_value_mild,
+    patient_productivity_cost = productivity_lost_cost / absolute_value_mild,
+    patient_total_cost = patient_direct_cost + patient_nonhealthcare_cost + patient_productivity_cost
+  ) -> summary_slapnea_costs
+```
+
+### Add Money index to the calculation
+
+```{r}
+# TODO find a good index for money to all included countries 
+
+## First try HICP index, what countries are included -----
+## https://appsso.eurostat.ec.europa.eu/nui/show.do?dataset=prc_hicp_aind&lang=en
+hicp <- readxl::read_xls("data/prc_hicp_aind.xls")
+hicp$`GEO/TIME`[hicp$`GEO/TIME` == "Germany (until 1990 former territory of the FRG)"] <- "Germany" ## change name of the country
+
+# ## Check countries 
+# unique(prevalences_final$location_name)
+# unique(hicp$`GEO/TIME`)
+# tmp <- sort(unique(prevalences_final$location_name))
+# tmp2 <- sort(unique(hicp$`GEO/TIME`))
+# tmp[tmp %in% tmp2] # these are found
+# tmp[!tmp %in% tmp2] # these are NOT
+# ## Missing countries 
+# # [1] "Albania"                "Andorra"                "Armenia"                "Azerbaijan"             "Belarus"               
+# #  [6] "Bosnia and Herzegovina" "Georgia"               "Kazakhstan"             "Monaco"                
+# # [11] "Montenegro"             "Republic of Moldova"    "Russian Federation"     "San Marino"             "Ukraine" 
+
+## Calculate correction index to all other countries
+hicp %>% 
+  filter(`GEO/TIME` %in% unique(prevalences_final$location_name)) %>% 
+  rename(location_name = `GEO/TIME`) %>% 
+  select(location_name, `2019`) %>% 
+  mutate(index = `2019` / hicp$`2019`[hicp$`GEO/TIME` == "Italy"]) %>% 
+  select(location_name, index) -> money_correction
+
+## Make correction
+slapnea_costs %>% 
+  left_join(money_correction, by = "location_name") %>% 
+  mutate(corrected = ifelse(is.na(index), FALSE, TRUE),
+         index = ifelse(is.na(index), 1, index),
+         direct_cost = direct_cost * index,
+         direct_non_healthcare_cost = direct_non_healthcare_cost * index,
+         productivity_lost_cost = productivity_lost_cost * index,
+         total_costs = direct_cost + direct_non_healthcare_cost + productivity_lost_cost) -> slapnea_costs_money_corrected
+
+## Calculate sums of direct, non healthcare and productivity lost costs.
+slapnea_costs_money_corrected %>% 
+  group_by(location_name, pop_female, pop_male) %>% 
+  summarise(direct_cost = sum(direct_cost, na.rm = T),
+            direct_non_healthcare_cost = sum(direct_non_healthcare_cost, na.rm = T),
+            productivity_lost_cost = sum(productivity_lost_cost, na.rm = T)) -> summary_slapnea_costs_money_corrected
+
+## Calculate per patient cost
+## by calculating absolute values (population) using OSA table (causes)
+summary_slapnea_costs_money_corrected %>% 
+  mutate(
+    ## Formulas
+    ## TODO: tarkista 
+    absolute_value_severe_moderate = ( (pop_female * osa_armeni$rate[osa_armeni$var == "Moderate" & osa_armeni$gender == "Female"]) + (pop_female * osa_armeni$rate[osa_armeni$var == "Severe" & osa_armeni$gender == "Female"]) + (pop_male * osa_armeni$rate[osa_armeni$var == "Moderate" & osa_armeni$gender == "Male"]) + (pop_male * osa_armeni$rate[osa_armeni$var == "Severe" & osa_armeni$gender == "Male"])),
+    absolute_value_mild = ( pop_female * osa_armeni$rate[osa_armeni$var == "Mild" & osa_armeni$gender == "Female"] + pop_male * osa_armeni$rate[osa_armeni$var == "Mild" & osa_armeni$gender == "Male"] ),
+    patient_direct_cost = direct_cost / absolute_value_severe_moderate,
+    patient_nonhealthcare_cost = direct_non_healthcare_cost / absolute_value_mild, 
+    patient_productivity_cost = productivity_lost_cost / absolute_value_mild,
+    patient_total_cost = patient_direct_cost + patient_nonhealthcare_cost + patient_productivity_cost
+  ) -> summary_slapnea_costs_money_corrected
+```
+
+
+
+```{r}
+dbDisconnect(con, shutdown=TRUE)
+```
+
+### TABLE: Sleep Apnea costs
+
+```{r}
+DT::datatable(summary_slapnea_costs, rownames = FALSE)
+```
+
+
+
+### Save dataset
+
+Saving dataset to new duckdb database and creating parquet files for longer storage.
+
+```{r, eval=eval_costs_savedb}
+## Write to duckdb
+library(duckdb)
+con = dbConnect(duckdb::duckdb(), dbdir="./data/sleep22_calculations.duckdb", read_only=FALSE)
+dbWriteTable(con, "prevalences", prevalences_final, overwrite=TRUE)
+dbWriteTable(con, "summary_slapnea_costs", summary_slapnea_costs, overwrite=TRUE)
+dbWriteTable(con, "slapnea_costs", slapnea_costs, overwrite=TRUE)
+dbWriteTable(con, "summary_slapnea_costs_corrected", summary_slapnea_costs_money_corrected, overwrite=TRUE)
+dbWriteTable(con, "slapnea_costs_corrected", slapnea_costs_money_corrected, overwrite=TRUE)
+dbDisconnect(con)
+
+## Write to parquet file
+con = dbConnect(duckdb::duckdb(), dbdir="./data/sleep22_calculations.duckdb", read_only=FALSE)
+if(dir.exists("data/parquet_calculations/")) fs::dir_delete("data/parquet_calculations/")
+if(!dir.exists("data/parquet_calculations/")) dir.create("data/parquet_calculations/")
+dbSendQuery(con, "EXPORT DATABASE 'data/parquet_calculations/' (FORMAT PARQUET);")
+dbDisconnect(conn = con)
+```
+
+
+## Validation
+
+Next we are going to validate the calculation to the article [Armeni et al. (2019) *Cost-of-illness study of Obstructive Sleep Apnea Syndrome (OSAS) in Italy*](https://cergas.unibocconi.eu/sites/default/files/files/Cost-of-illness-study-of-Obstructive-Sleep-Apnea-Syndrome-%2528OSAS%2529-in-Italy_Report%25281%2529.pdf). Because we use different data, results are going to be different,
+.
+
+### Population
+
+Population in Armeni dataset is 
+
+: Aged 15-74: Population |
+|-----------|------------|  
+| Female    | 22 708 659 |
+| Male	    | 22 279 959 |
+| Total	    | 44 988 618 |
+
+In our dataset from IHME data, population is a bit larger:
+
+```{r, echo=FALSE}
+summary_slapnea_costs %>% 
+  filter(location_name == "Italy") %>% 
+  select(pop_female, pop_male) %>% 
+  mutate(pop_total = pop_female + pop_male) %>% 
+  tidyr::pivot_longer(c(pop_total, pop_female, pop_male), "Population") %>% 
+  select(Population, value)
+```
+
+### Prevalences
+
+Prevalences in the article are combined from different datasources (table 9, page 37). We have a bit different prevalences which are shown below:
+
+```{r, include=FALSE, eval=FALSE}
+# Stroke tarkistus
+tbl(con, "ihme") %>% 
+  filter(cause_id == 494 & location_name == "Italy" & measure_name == "Prevalence" & metric_name == "Number" & age_id > 7 & age_id < 20 & sex_id == 3) %>% 
+  summarise(stroke = sum(val, na.rm = T))
+# 430529
+
+## Population
+tbl(con, "pop") %>% 
+  filter(location_name == "Italy" & sex_name == "both" & age_group > 14 & age_group < 75 & year_id == 2019) %>% 
+  summarise(population = sum(total_population))
+# 45304482
+
+## Stroke 15-74 vaestosta
+(430529/45304482) * 100
+## eli  0.95 % vaestosta
+## artikkelissa luku on 0.2 %, joten ilmeisemmin laskenta on oikein (5x kustannus)
+```
+
+
+```{r, echo=FALSE}
+val <- readxl::read_xlsx("data/validation-italy.xlsx", sheet = "validation_summary")
+DT::datatable(val, rownames = FALSE)
+```
+

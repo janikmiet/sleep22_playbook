@@ -1,0 +1,55 @@
+---
+title: "Sleep Revolution: Sleep Apnea Cost"
+author: "Jani Miettinen, Ida Alakörkkö, Anna But & Reijo Sund"
+site: bookdown::bookdown_site
+output:
+  bookdown::gitbook:
+    lib_dir: "book_assets"
+    config:
+      toc:
+        collapse: section
+        scroll_highlight: yes
+        before: null
+        after: null
+      toolbar:
+        position: fixed
+      edit : null
+      download: null
+      search: yes
+      fontsettings:
+        theme: white
+        family: sans
+        size: 2
+      sharing: no
+  bookdown::pdf_book:
+    keep_tex: yes
+---
+
+
+# Estimating costs of sleep apnea
+
+```{r, include=FALSE}
+source("global.R")
+```
+
+**LAST UPDATE: `r Sys.time()`**
+
+THIS PROJECT ESTIMATES SLEEP APNEA COSTS IN EUROPE. DATA IS PUBLICLY AVAILABLE AT <http://ghdx.healthdata.org/> BY CC BY-NC-ND 4.0 LICENCE. RESULTS CAN BE REPLICATED BY THIS GUIDE. 
+
+We are interested sleep apnea costs in Europe between age groups of 15-74 / 30-69 years old. Data is collected from the year 2019. Following countries are included to the estimation:
+
+```{r echo=FALSE}
+countries <- c("Albania","Armenia","Austria","Azerbaijan","Belarus","Belgium","Bosnia and Herzegovina","Bulgaria","Croatia","Cyprus","Czechia","Denmark","Estonia","Finland","France","Georgia","Germany","Greece","Hungary","Iceland","Ireland","Italy","Kazakhstan","Latvia","Lithuania","Luxembourg","Malta","Republic of Moldova","Montenegro","Netherlands","North Macedonia","Norway","Poland","Portugal","Romania","Russian Federation","Serbia","Slovakia","Slovenia","Spain","Sweden","Switzerland","Turkey","Ukraine","United Kingdom")
+countries
+```
+
+```{r, fig.cap="Estimated sleep apnea costs in Europe per patient in 2019."}
+# plot_europe_cost.png
+```
+![](img/plot-europe-cost.png)
+
+Sleep apnea cost can be estimated by top-down calculation method presented in  *[Armeni et al. (2019) Cost-of-illness study of Obstructive Sleep Apnea Syndrome (OSAS) in Italy](https://cergas.unibocconi.eu/sites/default/files/files/Cost-of-illness-study-of-Obstructive-Sleep-Apnea-Syndrome-%2528OSAS%2529-in-Italy_Report%25281%2529.pdf)*. This project utilizes estimation method with other open data science methods for 42 countries. Guide follows step-by-step data processing by R and packages such as `duckdb`, `tidyverse`, `vroom` and `dplyr`. 
+
+
+-----
+

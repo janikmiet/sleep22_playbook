@@ -1,0 +1,51 @@
+```{r setup_nexr, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# About
+
+This project is systematically documented by using [bookdown](https://bookdown.org/) package. Bookdown is a package, which helps to write chapters and documents in R. We are also finding best practices on working with many/large csv-datasets by using packages such as [fs](https://www.tidyverse.org/blog/2018/01/fs-1.0.0/) and [vroom](https://www.tidyverse.org/blog/2019/05/vroom-1-0-0/), [tidyverse](https://www.tidyverse.org) and [duckdb](https://duckdb.org/).
+
+```{r, include = FALSE}
+options("width" = 82)
+```
+
+* [Memos](https://research.janimiettinen.fi/material/sleep22/index.html)
+* [Github project](https://github.com/janikmiet/sleep22)
+
+
+-----
+
+# References
+
+* [Bookdown package](https://bookdown.org/)
+
+* [duckdb](https://duckdb.org/)
+
+* [ghdx healthdata](http://ghdx.healthdata.org/)
+
+* [Estimation source](https://cergas.unibocconi.eu/sites/default/files/files/Cost-of-illness-study-of-Obstructive-Sleep-Apnea-Syndrome-%2528OSAS%2529-in-Italy_Report%25281%2529.pdf)
+
+
+**Index correction datas**
+
+- <https://ec.europa.eu/eurostat/web/hicp/data/database>
+
+
+
+# Testing output
+
+## testing
+
+```{r}
+getwd()
+```
+
+```{r}
+here::here()
+```
+
+
+
+

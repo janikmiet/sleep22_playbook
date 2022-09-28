@@ -1,0 +1,212 @@
+
+```{r setup_db, include=FALSE}
+eval_loadflat=FALSE
+eval_dbsave = FALSE
+```
+
+# Database
+
+In this section we are going to clean and store datasets into `duckdb` database. We are going to filter datasets only to include these countries:
+
+```{r, echo=FALSE}
+europe <- c("Albania","Armenia","Austria","Azerbaijan","Belarus","Belgium","Bosnia and Herzegovina","Bulgaria","Croatia","Cyprus","Czechia","Denmark","Estonia","Finland","France","Georgia","Germany","Greece","Hungary","Iceland","Ireland","Italy","Kazakhstan","Latvia","Lithuania","Luxembourg","Malta","Republic of Moldova","Montenegro","Netherlands","North Macedonia","Norway","Poland","Portugal","Romania","Russian Federation","Serbia","Slovakia","Slovenia","Spain","Sweden","Switzerland","Turkey","Ukraine","United Kingdom")
+
+europe
+```
+
+First load necessary packages
+
+```{r}
+library(fs)
+library(dplyr)
+library(vroom)
+library(readxl)
+```
+
+## Load datasets
+
+### Population dataset
+
+Population dataset is in folder `data/IHME_GBD_2019_POP_2010_2019_SYA/`. Let's load all file locations
+
+```{r, eval = eval_loadflat}
+loc <- ("data/IHME_GBD_2019_POP_2010_2019_SYA/")
+files <- dir_ls(loc, glob = "*.CSV")
+files
+```
+Load all files and check available countries and years
+
+```{r, eval = FALSE, include=FALSE}
+POP <- NULL
+for(i in seq_along(files)) {
+  population <- vroom(files[i], id = "file_name")
+  POP <- population %>% 
+    group_by(location_name, year_id) %>% 
+    summarise(total_population = sum(val, na.rm = T)) %>% 
+    bind_rows(POP)
+  rm(population)
+}
+unique(POP$year_id)
+sort(as.character(unique(POP$location_name)))
+```
+
+Load all files and clean the datasets
+
+```{r, eval = eval_loadflat, message=FALSE, warning=FALSE}
+POP <- NULL
+for(i in seq_along(files)) {
+  population <- vroom(files[i], id = "file_name")
+  
+  POP <- population %>% 
+    group_by(location_name, year_id, sex_name, age_group_name, age_group_id) %>% 
+    summarise(total_population = sum(val, na.rm = T)) %>% 
+    bind_rows(POP)
+  
+  rm(population)
+}
+
+## create a new age_group variable by re-adjusting age_group_name variable to integer
+unique(POP$age_group_name)
+POP$age_group <- POP$age_group_name
+POP$age_group[POP$age_group == "<1 year"] <- 0
+POP$age_group[POP$age_group == "95 plus"] <- 95
+POP$age_group <- as.integer(POP$age_group)
+
+## filter only europe countries
+POP <- POP %>% 
+  filter(location_name %in% europe) 
+
+## Change location_names to universal
+## change original to this: "Bosnia and Herz."> "Bosnia and Herzegovina"
+## change original to this: Czechia" > ("Czech Rep.") > "Czech Republic"
+## change original to this: "Russian Federation" > "Russia"
+## change original to this: "North Macedonia" > "Macedonia"
+## change original to this: "Republic of Moldova" > "Moldova" 
+# unique(POP$location_name)
+# POP[POP$location_name == "Bosnia and Herz.",] <- "Bosnia and Herzegovina"
+POP$location_name[POP$location_name == "Czechia"] <- "Czech Republic"
+POP$location_name[POP$location_name == "Russian Federation"] <- "Russia"
+POP$location_name[POP$location_name == "North Macedonia"] <- "Macedonia"
+POP$location_name[POP$location_name == "Republic of Moldova"] <- "Moldova"
+```
+
+Calculate Total population in 2019 of selected European countries
+
+```{r, eval = eval_loadflat}
+## Calculate Total population in 2019 of selected European countries
+POP %>% 
+  filter(sex_name == "both" & year_id == 2019) %>% 
+  group_by(2019) %>%
+  summarise(pop = sum(total_population)) -> total_population_2019
+total_population_2019
+```
+
+### IHME dataset
+
+Datasets are in folder `data/ihmedata/`. Load all the file location into a object.
+
+```{r, eval = eval_loadflat}
+files <- fs::dir_ls ("data/ihmedata/", recurse = T, glob = "*.csv")
+# files
+```
+
+Load all files and filter only selected countries 
+
+```{r, eval = eval_loadflat}
+IHME <- NULL
+for(i in seq_along(files)) {
+  IHME <- IHME %>% 
+    rbind(vroom(files[i], id = "file_name")) %>% 
+    filter(location_name %in% europe)
+}
+```
+
+```{r, eval = eval_loadflat, include=FALSE}
+## Clean unnecessary objects
+rm(list=c("files", "i", "loc"))
+```
+
+```{r, eval = eval_loadflat, include=FALSE}
+## Check available countries and years
+sort(as.character(unique(IHME$location_name)))
+unique(IHME$year)
+```
+
+```{r, eval = eval_loadflat, include=FALSE}
+## Filter dataset only to 
+IHME <- IHME %>% 
+    filter(location_name %in% europe)
+```
+
+
+```{r, eval = eval_loadflat, include=FALSE}
+## Change location_names to universal
+## change original to this: "Bosnia and Herz."> "Bosnia and Herzegovina"
+## change original to this: Czechia" > ("Czech Rep.") > "Czech Republic"
+## change original to this: "Russian Federation" > "Russia"
+## change original to this: "North Macedonia" > "Macedonia"
+## change original to this: "Republic of Moldova" > "Moldova" 
+# sort(unique(IHME$location_name))
+# IHME[IHME$location_name == "Bosnia and Herz.",] <- "Bosnia and Herzegovina"
+IHME$location_name[IHME$location_name == "Czechia"] <- "Czech Republic"
+IHME$location_name[IHME$location_name == "Russian Federation"] <- "Russia"
+IHME$location_name[IHME$location_name == "North Macedonia"] <- "Macedonia"
+IHME$location_name[IHME$location_name == "Republic of Moldova"] <- "Moldova"
+```
+
+### Calculator files
+
+We have included a Excel file which holds data for the calculator. These data are taken from the article [Ameni et al. (2019) Cost-of-illness study of Obstructive Sleep Apnea Syndrome (OSAS) in Italy](https://cergas.unibocconi.eu/sites/default/files/files/Cost-of-illness-study-of-Obstructive-Sleep-Apnea-Syndrome-%2528OSAS%2529-in-Italy_Report%25281%2529.pdf)
+
+```{r}
+tbl1 <- readxl::read_xlsx("data/osa_tables.xlsx", sheet = "causes")
+tbl4 <- readxl::read_xlsx("data/osa_tables.xlsx", sheet = "causes_simple")
+tbl2 <- readxl::read_xlsx("data/osa_tables.xlsx", sheet = "osa_armeni")
+tbl3 <- readxl::read_xlsx("data/osa_tables.xlsx", sheet = "osa_benjafield")
+```
+
+
+## Moving data to duckdb
+
+In this section we move created datasets to duckdb database and trasform to *parquet* file. 
+
+Further reading:
+
+* <https://duckdb.org/docs/api/r>
+* <https://duckdb.org/2021/12/03/duck-arrow.html>
+
+Firstly install duckdb and arrow packages
+
+```{r eval=FALSE}
+install.packages("duckdb")
+install.packages("arrow")
+```
+
+Create a connection and move datasets `POP` and `IHME` into duckdb. 
+
+```{r, eval = eval_dbsave}
+library(duckdb)
+con = dbConnect(duckdb::duckdb(), dbdir="./data/sleep22.duckdb", read_only=FALSE)
+dbWriteTable(con, "IHME", IHME, overwrite=TRUE)
+dbWriteTable(con, "POP", POP, overwrite=TRUE)
+dbWriteTable(con, "causes", tbl1, overwrite=TRUE) # old slapnea
+dbWriteTable(con, "osa_armeni", tbl2, overwrite=TRUE)
+dbWriteTable(con, "osa_benjafield", tbl3, overwrite=TRUE)
+dbWriteTable(con, "causes_simple", tbl4, overwrite=TRUE)
+dbDisconnect(conn = con)
+```
+
+### Transform to parquet
+
+Transform whole database to parquet file system
+
+```{r eval=eval_dbsave}
+con = dbConnect(duckdb::duckdb(), dbdir="./data/sleep22.duckdb", read_only=FALSE)
+if(dir.exists("data/parquet/")) fs::dir_delete("data/parquet/")
+if(!dir.exists("data/parquet/")) dir.create("data/parquet/")
+dbSendQuery(con, "EXPORT DATABASE 'data/parquet/' (FORMAT PARQUET);")
+dbDisconnect(conn = con)
+```
+
+
+

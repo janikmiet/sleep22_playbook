@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>3 Flat files to database | Sleep Revolution: Sleep Apnea Cost</title>
+  <meta name="description" content="3 Flat files to database | Sleep Revolution: Sleep Apnea Cost" />
+  <meta name="generator" content="bookdown 0.24 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="3 Flat files to database | Sleep Revolution: Sleep Apnea Cost" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="3 Flat files to database | Sleep Revolution: Sleep Apnea Cost" />
+  
+  
+  
+
+<meta name="author" content="Jani Miettinen, Ida Alakörkkö, Anna But &amp; Reijo Sund" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="flat-files.html"/>
+<link rel="next" href="explorative-data-analysis.html"/>
+<script src="book_assets/header-attrs-2.11/header-attrs.js"></script>
+<script src="book_assets/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="book_assets/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="book_assets/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="book_assets/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="book_assets/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="book_assets/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="book_assets/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="book_assets/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="book_assets/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="book_assets/anchor-sections-1.0.1/anchor-sections.js"></script>
+<script src="book_assets/htmlwidgets-1.5.4/htmlwidgets.js"></script>
+<link href="book_assets/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet" />
+<script src="book_assets/datatables-binding-0.19/datatables.js"></script>
+<link href="book_assets/dt-core-1.10.20/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="book_assets/dt-core-1.10.20/css/jquery.dataTables.extra.css" rel="stylesheet" />
+<script src="book_assets/dt-core-1.10.20/js/jquery.dataTables.min.js"></script>
+<link href="book_assets/crosstalk-1.1.1/css/crosstalk.css" rel="stylesheet" />
+<script src="book_assets/crosstalk-1.1.1/js/crosstalk.min.js"></script>
+<link href="book_assets/nouislider-7.0.10/jquery.nouislider.min.css" rel="stylesheet" />
+<script src="book_assets/nouislider-7.0.10/jquery.nouislider.min.js"></script>
+<link href="book_assets/selectize-0.12.0/selectize.bootstrap3.css" rel="stylesheet" />
+<script src="book_assets/selectize-0.12.0/selectize.min.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Estimating costs of sleep apnea</a></li>
+<li class="chapter" data-level="2" data-path="flat-files.html"><a href="flat-files.html"><i class="fa fa-check"></i><b>2</b> Flat Files</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="flat-files.html"><a href="flat-files.html#population"><i class="fa fa-check"></i><b>2.1</b> Population</a>
+<ul>
+<li class="chapter" data-level="2.1.1" data-path="flat-files.html"><a href="flat-files.html#load-data-into-r"><i class="fa fa-check"></i><b>2.1.1</b> Load data into R</a></li>
+<li class="chapter" data-level="2.1.2" data-path="flat-files.html"><a href="flat-files.html#explore-dataset"><i class="fa fa-check"></i><b>2.1.2</b> Explore dataset</a></li>
+<li class="chapter" data-level="2.1.3" data-path="flat-files.html"><a href="flat-files.html#load-and-modify-multiple-files"><i class="fa fa-check"></i><b>2.1.3</b> Load and modify multiple files</a></li>
+<li class="chapter" data-level="2.1.4" data-path="flat-files.html"><a href="flat-files.html#included-european-countries"><i class="fa fa-check"></i><b>2.1.4</b> Included European countries</a></li>
+<li class="chapter" data-level="2.1.5" data-path="flat-files.html"><a href="flat-files.html#europe-total-population-in-2019"><i class="fa fa-check"></i><b>2.1.5</b> Europe total population in 2019</a></li>
+<li class="chapter" data-level="2.1.6" data-path="flat-files.html"><a href="flat-files.html#plot-finland-population-2019"><i class="fa fa-check"></i><b>2.1.6</b> PLOT: Finland population 2019</a></li>
+<li class="chapter" data-level="2.1.7" data-path="flat-files.html"><a href="flat-files.html#plot-european-countries-population"><i class="fa fa-check"></i><b>2.1.7</b> PLOT: European countries population</a></li>
+</ul></li>
+<li class="chapter" data-level="2.2" data-path="flat-files.html"><a href="flat-files.html#ihme-dataset"><i class="fa fa-check"></i><b>2.2</b> IHME dataset</a>
+<ul>
+<li class="chapter" data-level="2.2.1" data-path="flat-files.html"><a href="flat-files.html#load-few-datasets"><i class="fa fa-check"></i><b>2.2.1</b> Load few datasets</a></li>
+<li class="chapter" data-level="2.2.2" data-path="flat-files.html"><a href="flat-files.html#load-all-datasets"><i class="fa fa-check"></i><b>2.2.2</b> Load all datasets</a></li>
+<li class="chapter" data-level="2.2.3" data-path="flat-files.html"><a href="flat-files.html#summary"><i class="fa fa-check"></i><b>2.2.3</b> Summary</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="flat-files-to-database.html"><a href="flat-files-to-database.html"><i class="fa fa-check"></i><b>3</b> Flat files to database</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="flat-files-to-database.html"><a href="flat-files-to-database.html#population-dataset"><i class="fa fa-check"></i><b>3.1</b> Population dataset</a></li>
+<li class="chapter" data-level="3.2" data-path="flat-files-to-database.html"><a href="flat-files-to-database.html#ihme-dataset-1"><i class="fa fa-check"></i><b>3.2</b> IHME dataset</a></li>
+<li class="chapter" data-level="3.3" data-path="flat-files-to-database.html"><a href="flat-files-to-database.html#calculator-files"><i class="fa fa-check"></i><b>3.3</b> Calculator files</a></li>
+<li class="chapter" data-level="3.4" data-path="flat-files-to-database.html"><a href="flat-files-to-database.html#moving-data-to-duckdb"><i class="fa fa-check"></i><b>3.4</b> Moving data to duckdb</a></li>
+<li class="chapter" data-level="3.5" data-path="flat-files-to-database.html"><a href="flat-files-to-database.html#transform-to-parquet"><i class="fa fa-check"></i><b>3.5</b> Transform to parquet</a></li>
+<li class="chapter" data-level="3.6" data-path="flat-files-to-database.html"><a href="flat-files-to-database.html#extra-duckdb-basics-and-dbi"><i class="fa fa-check"></i><b>3.6</b> EXTRA: duckdb basics (and DBI)</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html"><i class="fa fa-check"></i><b>4</b> Explorative Data Analysis</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#countries-in-dataset"><i class="fa fa-check"></i><b>4.1</b> Countries in dataset</a></li>
+<li class="chapter" data-level="4.2" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#dataset-unique-values"><i class="fa fa-check"></i><b>4.2</b> Dataset unique values</a>
+<ul>
+<li class="chapter" data-level="4.2.1" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#measure_name"><i class="fa fa-check"></i><b>4.2.1</b> measure_name</a></li>
+<li class="chapter" data-level="4.2.2" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#sex_name"><i class="fa fa-check"></i><b>4.2.2</b> sex_name</a></li>
+<li class="chapter" data-level="4.2.3" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#age_name"><i class="fa fa-check"></i><b>4.2.3</b> age_name</a></li>
+<li class="chapter" data-level="4.2.4" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#metric_name"><i class="fa fa-check"></i><b>4.2.4</b> metric_name</a></li>
+<li class="chapter" data-level="4.2.5" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#year"><i class="fa fa-check"></i><b>4.2.5</b> year</a></li>
+<li class="chapter" data-level="4.2.6" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#cause_name"><i class="fa fa-check"></i><b>4.2.6</b> cause_name</a></li>
+</ul></li>
+<li class="chapter" data-level="4.3" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#calculator-datas"><i class="fa fa-check"></i><b>4.3</b> Calculator datas</a></li>
+<li class="chapter" data-level="4.4" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#plot-finland-population-2019-1"><i class="fa fa-check"></i><b>4.4</b> PLOT: Finland population 2019</a></li>
+<li class="chapter" data-level="4.5" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#plot-european-countries-population-1"><i class="fa fa-check"></i><b>4.5</b> PLOT: European countries population</a></li>
+<li class="chapter" data-level="4.6" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#table-prevalences"><i class="fa fa-check"></i><b>4.6</b> TABLE: Prevalences</a></li>
+<li class="chapter" data-level="4.7" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#table-incidences"><i class="fa fa-check"></i><b>4.7</b> TABLE: Incidences</a></li>
+<li class="chapter" data-level="4.8" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#table-deaths"><i class="fa fa-check"></i><b>4.8</b> TABLE: Deaths</a></li>
+<li class="chapter" data-level="4.9" data-path="explorative-data-analysis.html"><a href="explorative-data-analysis.html#table-prevalences-per-countries"><i class="fa fa-check"></i><b>4.9</b> TABLE: Prevalences per countries</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="create-datas-for-the-calculator.html"><a href="create-datas-for-the-calculator.html"><i class="fa fa-check"></i><b>5</b> Create datas for the calculator</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="create-datas-for-the-calculator.html"><a href="create-datas-for-the-calculator.html#table-prevalences-1"><i class="fa fa-check"></i><b>5.1</b> Table: prevalences</a></li>
+<li class="chapter" data-level="5.2" data-path="create-datas-for-the-calculator.html"><a href="create-datas-for-the-calculator.html#save-data-to-new-database"><i class="fa fa-check"></i><b>5.2</b> Save data to new database</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="calculate-costs.html"><a href="calculate-costs.html"><i class="fa fa-check"></i><b>6</b> Calculate costs</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="calculate-costs.html"><a href="calculate-costs.html#per-country"><i class="fa fa-check"></i><b>6.1</b> Per Country</a></li>
+<li class="chapter" data-level="6.2" data-path="calculate-costs.html"><a href="calculate-costs.html#per-patient"><i class="fa fa-check"></i><b>6.2</b> Per Patient</a></li>
+<li class="chapter" data-level="6.3" data-path="calculate-costs.html"><a href="calculate-costs.html#table-sleep-apnea-costs"><i class="fa fa-check"></i><b>6.3</b> TABLE: Sleep Apnea costs</a></li>
+<li class="chapter" data-level="6.4" data-path="calculate-costs.html"><a href="calculate-costs.html#save-dataset"><i class="fa fa-check"></i><b>6.4</b> Save dataset</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="visualizing.html"><a href="visualizing.html"><i class="fa fa-check"></i><b>7</b> Visualizing</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="visualizing.html"><a href="visualizing.html#sleep-apnea-expenses"><i class="fa fa-check"></i><b>7.1</b> Sleep apnea expenses</a>
+<ul>
+<li class="chapter" data-level="7.1.1" data-path="visualizing.html"><a href="visualizing.html#direct-costs"><i class="fa fa-check"></i><b>7.1.1</b> Direct costs</a></li>
+<li class="chapter" data-level="7.1.2" data-path="visualizing.html"><a href="visualizing.html#direct-non-healthcare-costs"><i class="fa fa-check"></i><b>7.1.2</b> Direct non-healthcare costs</a></li>
+<li class="chapter" data-level="7.1.3" data-path="visualizing.html"><a href="visualizing.html#productivity-loss-costs"><i class="fa fa-check"></i><b>7.1.3</b> Productivity loss costs</a></li>
+</ul></li>
+<li class="chapter" data-level="7.2" data-path="visualizing.html"><a href="visualizing.html#leaflet-map"><i class="fa fa-check"></i><b>7.2</b> Leaflet map</a></li>
+<li class="chapter" data-level="7.3" data-path="visualizing.html"><a href="visualizing.html#another-interactive-example"><i class="fa fa-check"></i><b>7.3</b> Another interactive example</a></li>
+<li class="chapter" data-level="7.4" data-path="visualizing.html"><a href="visualizing.html#tables-cost-per-patient"><i class="fa fa-check"></i><b>7.4</b> TABLES: cost per patient</a></li>
+<li class="chapter" data-level="7.5" data-path="visualizing.html"><a href="visualizing.html#tables-detailed-cost-per-patient"><i class="fa fa-check"></i><b>7.5</b> TABLES: detailed cost per patient</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="side-project.html"><a href="side-project.html"><i class="fa fa-check"></i><b>8</b> Side project</a></li>
+<li class="chapter" data-level="9" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i><b>9</b> References</a></li>
+<li class="chapter" data-level="10" data-path="next-task.html"><a href="next-task.html"><i class="fa fa-check"></i><b>10</b> Next task?</a>
+<ul>
+<li class="chapter" data-level="10.1" data-path="next-task.html"><a href="next-task.html#shiny-app-todo-ideas"><i class="fa fa-check"></i><b>10.1</b> Shiny App &amp; todo ideas</a></li>
+<li class="chapter" data-level="10.2" data-path="next-task.html"><a href="next-task.html#testing"><i class="fa fa-check"></i><b>10.2</b> testing</a></li>
+<li class="chapter" data-level="10.3" data-path="next-task.html"><a href="next-task.html#web-page-and-shiny"><i class="fa fa-check"></i><b>10.3</b> web page and shiny</a></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Sleep Revolution: Sleep Apnea Cost</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="flat-files-to-database" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> Flat files to database</h1>
+<p>Now that we are more familiar of the datasets, let’s store files into duckdb database for further analyses. <strong>We are going to filter datasets only to include these countries:</strong></p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="flat-files-to-database.html#cb22-1" aria-hidden="true" tabindex="-1"></a>europe <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Albania&quot;</span>,<span class="st">&quot;Andorra&quot;</span>,<span class="st">&quot;Armenia&quot;</span>,<span class="st">&quot;Austria&quot;</span>,<span class="st">&quot;Azerbaijan&quot;</span>,<span class="st">&quot;Belarus&quot;</span>,<span class="st">&quot;Belgium&quot;</span>,<span class="st">&quot;Bosnia and Herzegovina&quot;</span>,<span class="st">&quot;Bulgaria&quot;</span>,<span class="st">&quot;Croatia&quot;</span>,<span class="st">&quot;Cyprus&quot;</span>,<span class="st">&quot;Czechia&quot;</span>,<span class="st">&quot;Denmark&quot;</span>,<span class="st">&quot;Estonia&quot;</span>,<span class="st">&quot;Finland&quot;</span>,<span class="st">&quot;France&quot;</span>,<span class="st">&quot;Georgia&quot;</span>,<span class="st">&quot;Germany&quot;</span>,<span class="st">&quot;Greece&quot;</span>,<span class="st">&quot;Hungary&quot;</span>,<span class="st">&quot;Iceland&quot;</span>,<span class="st">&quot;Ireland&quot;</span>,<span class="st">&quot;Italy&quot;</span>,<span class="st">&quot;Kazakhstan&quot;</span>,<span class="st">&quot;Latvia&quot;</span>,<span class="st">&quot;Lithuania&quot;</span>,<span class="st">&quot;Luxembourg&quot;</span>,<span class="st">&quot;Malta&quot;</span>,<span class="st">&quot;Republic of Moldova&quot;</span>,<span class="st">&quot;Monaco&quot;</span>,<span class="st">&quot;Montenegro&quot;</span>,<span class="st">&quot;Netherlands&quot;</span>,<span class="st">&quot;North Macedonia&quot;</span>,<span class="st">&quot;Norway&quot;</span>,<span class="st">&quot;Poland&quot;</span>,<span class="st">&quot;Portugal&quot;</span>,<span class="st">&quot;Romania&quot;</span>,<span class="st">&quot;Russian Federation&quot;</span>,<span class="st">&quot;San Marino&quot;</span>,<span class="st">&quot;Serbia&quot;</span>,<span class="st">&quot;Slovakia&quot;</span>,<span class="st">&quot;Slovenia&quot;</span>,<span class="st">&quot;Spain&quot;</span>,<span class="st">&quot;Sweden&quot;</span>,<span class="st">&quot;Switzerland&quot;</span>,<span class="st">&quot;Turkey&quot;</span>,<span class="st">&quot;Ukraine&quot;</span>,<span class="st">&quot;United Kingdom&quot;</span>)</span></code></pre></div>
+<p>First load necessary packages</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="flat-files-to-database.html#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(fs)</span>
+<span id="cb23-2"><a href="flat-files-to-database.html#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb23-3"><a href="flat-files-to-database.html#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(vroom)</span>
+<span id="cb23-4"><a href="flat-files-to-database.html#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readxl)</span></code></pre></div>
+<div id="population-dataset" class="section level2" number="3.1">
+<h2><span class="header-section-number">3.1</span> Population dataset</h2>
+<p>Population dataset is in folder <code>data/IHME_GBD_2019_POP_2010_2019_SYA/</code>. Let’s load all file locations</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="flat-files-to-database.html#cb24-1" aria-hidden="true" tabindex="-1"></a>loc <span class="ot">&lt;-</span> (<span class="st">&quot;data/IHME_GBD_2019_POP_2010_2019_SYA/&quot;</span>)</span>
+<span id="cb24-2"><a href="flat-files-to-database.html#cb24-2" aria-hidden="true" tabindex="-1"></a>files <span class="ot">&lt;-</span> <span class="fu">dir_ls</span>(loc, <span class="at">glob =</span> <span class="st">&quot;*.CSV&quot;</span>)</span>
+<span id="cb24-3"><a href="flat-files-to-database.html#cb24-3" aria-hidden="true" tabindex="-1"></a>files</span></code></pre></div>
+<p>Load all files and clean the dataset</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="flat-files-to-database.html#cb25-1" aria-hidden="true" tabindex="-1"></a>POP <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb25-2"><a href="flat-files-to-database.html#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="fu">seq_along</span>(files)) {</span>
+<span id="cb25-3"><a href="flat-files-to-database.html#cb25-3" aria-hidden="true" tabindex="-1"></a>  population <span class="ot">&lt;-</span> <span class="fu">vroom</span>(files[i], <span class="at">id =</span> <span class="st">&quot;file_name&quot;</span>)</span>
+<span id="cb25-4"><a href="flat-files-to-database.html#cb25-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb25-5"><a href="flat-files-to-database.html#cb25-5" aria-hidden="true" tabindex="-1"></a>  POP <span class="ot">&lt;-</span> population <span class="sc">%&gt;%</span> </span>
+<span id="cb25-6"><a href="flat-files-to-database.html#cb25-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(location_name, year_id, sex_name, age_group_name, age_group_id) <span class="sc">%&gt;%</span> </span>
+<span id="cb25-7"><a href="flat-files-to-database.html#cb25-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(<span class="at">total_population =</span> <span class="fu">sum</span>(val, <span class="at">na.rm =</span> T)) <span class="sc">%&gt;%</span> </span>
+<span id="cb25-8"><a href="flat-files-to-database.html#cb25-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">bind_rows</span>(POP)</span>
+<span id="cb25-9"><a href="flat-files-to-database.html#cb25-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb25-10"><a href="flat-files-to-database.html#cb25-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(population)</span>
+<span id="cb25-11"><a href="flat-files-to-database.html#cb25-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb25-12"><a href="flat-files-to-database.html#cb25-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-13"><a href="flat-files-to-database.html#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="do">## create a new age_group variable by re-adjusting age_group_name variable to integer</span></span>
+<span id="cb25-14"><a href="flat-files-to-database.html#cb25-14" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(POP<span class="sc">$</span>age_group_name)</span>
+<span id="cb25-15"><a href="flat-files-to-database.html#cb25-15" aria-hidden="true" tabindex="-1"></a>POP<span class="sc">$</span>age_group <span class="ot">&lt;-</span> POP<span class="sc">$</span>age_group_name</span>
+<span id="cb25-16"><a href="flat-files-to-database.html#cb25-16" aria-hidden="true" tabindex="-1"></a>POP<span class="sc">$</span>age_group[POP<span class="sc">$</span>age_group <span class="sc">==</span> <span class="st">&quot;&lt;1 year&quot;</span>] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb25-17"><a href="flat-files-to-database.html#cb25-17" aria-hidden="true" tabindex="-1"></a>POP<span class="sc">$</span>age_group[POP<span class="sc">$</span>age_group <span class="sc">==</span> <span class="st">&quot;95 plus&quot;</span>] <span class="ot">&lt;-</span> <span class="dv">95</span></span>
+<span id="cb25-18"><a href="flat-files-to-database.html#cb25-18" aria-hidden="true" tabindex="-1"></a>POP<span class="sc">$</span>age_group <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(POP<span class="sc">$</span>age_group)</span>
+<span id="cb25-19"><a href="flat-files-to-database.html#cb25-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-20"><a href="flat-files-to-database.html#cb25-20" aria-hidden="true" tabindex="-1"></a><span class="do">## filter only europe countries</span></span>
+<span id="cb25-21"><a href="flat-files-to-database.html#cb25-21" aria-hidden="true" tabindex="-1"></a>POP <span class="ot">&lt;-</span> POP <span class="sc">%&gt;%</span> </span>
+<span id="cb25-22"><a href="flat-files-to-database.html#cb25-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(location_name <span class="sc">%in%</span> europe) </span></code></pre></div>
+<p>Calculate Total population in 2019 of selected European countries</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="flat-files-to-database.html#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Calculate Total population in 2019 of selected European countries</span></span>
+<span id="cb26-2"><a href="flat-files-to-database.html#cb26-2" aria-hidden="true" tabindex="-1"></a>POP <span class="sc">%&gt;%</span> </span>
+<span id="cb26-3"><a href="flat-files-to-database.html#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(sex_name <span class="sc">==</span> <span class="st">&quot;both&quot;</span> <span class="sc">&amp;</span> year_id <span class="sc">==</span> <span class="dv">2019</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb26-4"><a href="flat-files-to-database.html#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(<span class="dv">2019</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb26-5"><a href="flat-files-to-database.html#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">pop =</span> <span class="fu">sum</span>(total_population)) <span class="ot">-&gt;</span> total_population_2019</span>
+<span id="cb26-6"><a href="flat-files-to-database.html#cb26-6" aria-hidden="true" tabindex="-1"></a>total_population_2019</span></code></pre></div>
+</div>
+<div id="ihme-dataset-1" class="section level2" number="3.2">
+<h2><span class="header-section-number">3.2</span> IHME dataset</h2>
+<p>Datasets are in folder <code>data/ihmedata/</code>. Load all the file location into a object.</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="flat-files-to-database.html#cb27-1" aria-hidden="true" tabindex="-1"></a>files <span class="ot">&lt;-</span> fs<span class="sc">::</span><span class="fu">dir_ls</span> (<span class="st">&quot;data/ihmedata/&quot;</span>, <span class="at">recurse =</span> T, <span class="at">glob =</span> <span class="st">&quot;*.csv&quot;</span>)</span>
+<span id="cb27-2"><a href="flat-files-to-database.html#cb27-2" aria-hidden="true" tabindex="-1"></a>files</span></code></pre></div>
+<p>Load all files and filter only European countries</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="flat-files-to-database.html#cb28-1" aria-hidden="true" tabindex="-1"></a>IHME <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb28-2"><a href="flat-files-to-database.html#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="fu">seq_along</span>(files)) {</span>
+<span id="cb28-3"><a href="flat-files-to-database.html#cb28-3" aria-hidden="true" tabindex="-1"></a>  IHME <span class="ot">&lt;-</span> IHME <span class="sc">%&gt;%</span> </span>
+<span id="cb28-4"><a href="flat-files-to-database.html#cb28-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rbind</span>(<span class="fu">vroom</span>(files[i], <span class="at">id =</span> <span class="st">&quot;file_name&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb28-5"><a href="flat-files-to-database.html#cb28-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(location_name <span class="sc">%in%</span> europe)</span>
+<span id="cb28-6"><a href="flat-files-to-database.html#cb28-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div id="calculator-files" class="section level2" number="3.3">
+<h2><span class="header-section-number">3.3</span> Calculator files</h2>
+<p>We have included a Excel file which holds data for the calculator.</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="flat-files-to-database.html#cb29-1" aria-hidden="true" tabindex="-1"></a>tbl1 <span class="ot">&lt;-</span> readxl<span class="sc">::</span><span class="fu">read_xlsx</span>(<span class="st">&quot;data/calculation/Top-down - cost.xlsx&quot;</span>, <span class="at">sheet =</span> <span class="st">&quot;tbl1&quot;</span>)</span>
+<span id="cb29-2"><a href="flat-files-to-database.html#cb29-2" aria-hidden="true" tabindex="-1"></a>tbl2 <span class="ot">&lt;-</span> readxl<span class="sc">::</span><span class="fu">read_xlsx</span>(<span class="st">&quot;data/calculation/Top-down - cost.xlsx&quot;</span>, <span class="at">sheet =</span> <span class="st">&quot;tbl2&quot;</span>)</span></code></pre></div>
+</div>
+<div id="moving-data-to-duckdb" class="section level2" number="3.4">
+<h2><span class="header-section-number">3.4</span> Moving data to duckdb</h2>
+<p>In this section we move created datasets to duckdb database and trasform to <em>parquet</em> file.</p>
+<p>Further reading:</p>
+<ul>
+<li><a href="https://duckdb.org/docs/api/r" class="uri">https://duckdb.org/docs/api/r</a></li>
+<li><a href="https://duckdb.org/2021/12/03/duck-arrow.html" class="uri">https://duckdb.org/2021/12/03/duck-arrow.html</a></li>
+</ul>
+<p>Firstly install duckdb and arrow packages</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="flat-files-to-database.html#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">&quot;duckdb&quot;</span>)</span>
+<span id="cb30-2"><a href="flat-files-to-database.html#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">&quot;arrow&quot;</span>)</span></code></pre></div>
+<p>Create a connection and move datasets <code>POP</code> and <code>IHME</code> into duckdb.</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="flat-files-to-database.html#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(duckdb)</span>
+<span id="cb31-2"><a href="flat-files-to-database.html#cb31-2" aria-hidden="true" tabindex="-1"></a>con <span class="ot">=</span> <span class="fu">dbConnect</span>(duckdb<span class="sc">::</span><span class="fu">duckdb</span>(), <span class="at">dbdir=</span><span class="st">&quot;./data/sleep22.duckdb&quot;</span>, <span class="at">read_only=</span><span class="cn">FALSE</span>)</span>
+<span id="cb31-3"><a href="flat-files-to-database.html#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(con, <span class="st">&quot;IHME&quot;</span>, IHME, <span class="at">overwrite=</span><span class="cn">TRUE</span>)</span>
+<span id="cb31-4"><a href="flat-files-to-database.html#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(con, <span class="st">&quot;POP&quot;</span>, POP, <span class="at">overwrite=</span><span class="cn">TRUE</span>)</span>
+<span id="cb31-5"><a href="flat-files-to-database.html#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(con, <span class="st">&quot;slapnea&quot;</span>, tbl1, <span class="at">overwrite=</span><span class="cn">TRUE</span>)</span>
+<span id="cb31-6"><a href="flat-files-to-database.html#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(con, <span class="st">&quot;paf&quot;</span>, tbl2, <span class="at">overwrite=</span><span class="cn">TRUE</span>)</span>
+<span id="cb31-7"><a href="flat-files-to-database.html#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(<span class="at">conn =</span> con)</span></code></pre></div>
+</div>
+<div id="transform-to-parquet" class="section level2" number="3.5">
+<h2><span class="header-section-number">3.5</span> Transform to parquet</h2>
+<p>Transform whole database to parquet file system</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="flat-files-to-database.html#cb32-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">=</span> <span class="fu">dbConnect</span>(duckdb<span class="sc">::</span><span class="fu">duckdb</span>(), <span class="at">dbdir=</span><span class="st">&quot;./data/sleep22.duckdb&quot;</span>, <span class="at">read_only=</span><span class="cn">FALSE</span>)</span>
+<span id="cb32-2"><a href="flat-files-to-database.html#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="fu">dir.exists</span>(<span class="st">&quot;data/parquet/&quot;</span>)) fs<span class="sc">::</span><span class="fu">dir_delete</span>(<span class="st">&quot;data/parquet/&quot;</span>)</span>
+<span id="cb32-3"><a href="flat-files-to-database.html#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">dir.exists</span>(<span class="st">&quot;data/parquet/&quot;</span>)) <span class="fu">dir.create</span>(<span class="st">&quot;data/parquet/&quot;</span>)</span>
+<span id="cb32-4"><a href="flat-files-to-database.html#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dbSendQuery</span>(con, <span class="st">&quot;EXPORT DATABASE &#39;data/parquet/&#39; (FORMAT PARQUET);&quot;</span>)</span>
+<span id="cb32-5"><a href="flat-files-to-database.html#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(<span class="at">conn =</span> con)</span></code></pre></div>
+</div>
+<div id="extra-duckdb-basics-and-dbi" class="section level2" number="3.6">
+<h2><span class="header-section-number">3.6</span> EXTRA: duckdb basics (and DBI)</h2>
+<p>Creating connection</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="flat-files-to-database.html#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;DBI&quot;</span>)</span>
+<span id="cb33-2"><a href="flat-files-to-database.html#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;duckdb&quot;</span>)</span>
+<span id="cb33-3"><a href="flat-files-to-database.html#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="co"># to start an in-memory database</span></span>
+<span id="cb33-4"><a href="flat-files-to-database.html#cb33-4" aria-hidden="true" tabindex="-1"></a>con <span class="ot">=</span> <span class="fu">dbConnect</span>(duckdb<span class="sc">::</span><span class="fu">duckdb</span>(), <span class="at">dbdir=</span><span class="st">&quot;:memory:&quot;</span>)</span>
+<span id="cb33-5"><a href="flat-files-to-database.html#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="co"># to use a database file (not shared between processes)</span></span>
+<span id="cb33-6"><a href="flat-files-to-database.html#cb33-6" aria-hidden="true" tabindex="-1"></a>con <span class="ot">=</span> <span class="fu">dbConnect</span>(duckdb<span class="sc">::</span><span class="fu">duckdb</span>(), <span class="at">dbdir=</span><span class="st">&quot;./data/my-db.duckdb&quot;</span>, <span class="at">read_only=</span><span class="cn">FALSE</span>)</span>
+<span id="cb33-7"><a href="flat-files-to-database.html#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="co"># to use a database file (shared between processes)</span></span>
+<span id="cb33-8"><a href="flat-files-to-database.html#cb33-8" aria-hidden="true" tabindex="-1"></a>con <span class="ot">=</span> <span class="fu">dbConnect</span>(duckdb<span class="sc">::</span><span class="fu">duckdb</span>(), <span class="at">dbdir=</span><span class="st">&quot;./data/my-db.duckdb&quot;</span>, <span class="at">read_only=</span><span class="cn">TRUE</span>)</span></code></pre></div>
+<p>Virtually copy data, but no data is stored after connection is closed</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="flat-files-to-database.html#cb34-1" aria-hidden="true" tabindex="-1"></a>duckdb<span class="sc">::</span><span class="fu">duckdb_register</span>(con, <span class="st">&quot;IHME2019&quot;</span>, ihme)</span>
+<span id="cb34-2"><a href="flat-files-to-database.html#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(con, <span class="st">&quot;SELECT * FROM IHME2019 LIMIT 10&quot;</span>) <span class="co"># works only in same connection session</span></span></code></pre></div>
+<p>Write a table into database</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="flat-files-to-database.html#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(con, <span class="st">&quot;IHME2019&quot;</span>, ihme)</span></code></pre></div>
+<p>Find out that data is available</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="flat-files-to-database.html#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(con, <span class="st">&quot;SELECT * FROM IHME2019 LIMIT 1&quot;</span>)</span></code></pre></div>
+<p>Disconnect</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="flat-files-to-database.html#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(<span class="at">conn =</span> con)</span></code></pre></div>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="flat-files.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="explorative-data-analysis.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="book_assets/gitbook-2.6.7/js/app.min.js"></script>
+<script src="book_assets/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="book_assets/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="book_assets/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="book_assets/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="book_assets/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="book_assets/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="book_assets/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": false,
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": null,
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "section",
+"scroll_highlight": true
+},
+"toolbar": {
+"position": "fixed"
+}
+});
+});
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,1079 @@
+---
+title: "Sleep Revolution: Sleep Apnea Cost"
+author: "Jani Miettinen, Ida Alakörkkö, Anna But & Reijo Sund"
+site: bookdown::bookdown_site
+output:
+  bookdown::gitbook:
+    lib_dir: "book_assets"
+    config:
+      toc:
+        collapse: section
+        scroll_highlight: yes
+        before: null
+        after: null
+      toolbar:
+        position: fixed
+      edit : null
+      download: null
+      search: yes
+      fontsettings:
+        theme: white
+        family: sans
+        size: 2
+      sharing: no
+  bookdown::pdf_book:
+    keep_tex: yes
+---
+
+# Estimating costs of sleep apnea
+
+Placeholder
+
+
+
+<!--chapter:end:index.Rmd-->
+
+
+# Data
+
+Placeholder
+
+
+## Population
+### Load data into R
+### Explore dataset
+### Load and modify multiple files
+### Included European countries
+### Europe total population in 2019
+### PLOT: Finland population 2019
+### PLOT: European countries population
+## IHME dataset
+### Load few datasets
+### Load all datasets
+### Summary 
+
+<!--chapter:end:01-flatfiles.Rmd-->
+
+
+# Database
+
+Placeholder
+
+
+## Load datasets
+### Population dataset
+### IHME dataset
+### Calculator files
+## Moving data to duckdb
+### Transform to parquet
+
+<!--chapter:end:02-database.Rmd-->
+
+
+# Explorative Data Analysis
+
+Placeholder
+
+
+## HME distinct values
+### measure_name
+### sex_name
+### age_name
+### metric_name
+### year
+### cause_name
+### Calculator datas
+## PLOT: Population in countries
+## PLOT: Finland population 2019
+## TABLE: Prevalences
+## TABLE: Incidences
+## TABLE: Deaths
+## TABLE: Prevalences per countries
+
+<!--chapter:end:03-eda.Rmd-->
+
+
+# Calculations
+
+Placeholder
+
+
+## Prevalences from ihme
+## Population from ihme
+## Prevalences from ihme dataset
+## Mortalities from ihme
+## Combining with base values
+## Table: prevalences and mortalities
+## Save data to new database
+## Costs
+### Per Country
+### Per Patient
+### Add Money index to the calculation
+### TABLE: Sleep Apnea costs
+### Save dataset
+## Validation
+### Population
+### Prevalences
+
+<!--chapter:end:04-calculations.Rmd-->
+
+
+# Results
+
+Placeholder
+
+
+### Table: cost per patient
+## Direct costs
+### Table: direct cost per patient
+## Direct non-healthcare costs
+### Table: direct non-healthcare cost
+## Productivity loss costs
+### Table: patient productivity cost
+## Working on...
+###  Leaflet map
+### Another interactive example
+### BASE MAP
+### Confident intervals
+
+<!--chapter:end:05-results.Rmd-->
+
+
+# Money corrected results
+
+Placeholder
+
+
+### Table: total costs
+## Direct costs
+### Table: direct costs
+## Direct non-healthcare costs
+### Table: Direct non-healthcare costs
+## Productivity loss costs
+### Table: productivity loss cost
+
+<!--chapter:end:06-results_corrected.Rmd-->
+
+
+# Database for Calculator Shiny
+
+Placeholder
+
+
+## Population datasets
+## Prevalences from ihme dataset
+## Mortalities from ihme
+## Add also base values
+## Table: prevalences and mortalities
+## Excel files
+### OSA values from article
+## Money index
+## Save data to new database
+### duckdb
+### Parquet
+## Data Based on Armeni OSA
+## Data based on Benjafield OSA prevalence
+## Map data
+## Save and copy data
+
+<!--chapter:end:07-newdb.Rmd-->
+
+```{r setup_interactive, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Interactive applications
+
+## Map visualization
+
+```{r}
+knitr::include_app(url = "https://janimiettinen.shinyapps.io/sleepapneacost/")
+```
+
+- URL: <https://janimiettinen.shinyapps.io/sleepapneacost/>
+
+## Calculator
+
+```{r}
+knitr::include_app(url = "https://janimiettinen.shinyapps.io/sleepapneacalculator/")
+```
+
+- URL: <https://janimiettinen.shinyapps.io/sleepapneacalculator/>
+
+<!--chapter:end:08-interactive.Rmd-->
+
+
+# Side project
+
+Placeholder
+
+
+## Shiny App & todo ideas
+## testing
+## web page and shiny
+
+<!--chapter:end:09-next.Rmd-->
+
+```{r setup_article, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+# Estimating sleep apnea costs by open data science methods
+
+Sleep apnea is disorder in which breathing repeatedly stops and stars during the sleep.
+
+
+## Methods
+
+There is no clear way how to calculate costs of sleep apnea. Patients can be undiscovered for long period time until they get sleep apnea diagnose.  Sleep apnea can cause ..... When patient is under diagnosed it means that patients can use healthcare services for many different reasons before they are diagnosed correctly and get help for sleep apnea.
+
+One method to estimate obstructive sleep apnea cost is presented in article by Armeni et al. (2019) Cost-of-illness study of Obstructive Sleep Apnea Syndrome (OSAS) in Italy. Method estimates costs by top to down; diseases which are related to sleep apnea, are used for estimating costs which sleep apnea patients generates. Costs are divided intoo 3 groups; direct healthcare, direct noon healthcare and productivity lost costs. Direct costs includes hospitalizations, consultations, laboratory testing, drug or medical device consumption, etc. Direct non healthcare costs includes transportation costs and informal care (i.e. care provided by family). Productivity costs includes losses related to illness or death, patients and informal care time off work.
+
+
+## Data
+
+The Global Data Exchange (GHDx) data catalog provides health-related open data. The Institute for Metric Health and Evaluation (IHME) offers open data for for the catalog. In this project we collected data from 2019 for 42 different countries such as disease prevalences and population information.
+
+
+
+## Building the estimation
+
+Data sets are publicly available and downloadable from GHDx website. Data sets consists of the population and disease prevalances information. Data can be downloaded as (several) CSV-files to local computer. We decided to use `duckdb` database package for R to storage the data. `duckdb` creates local sql database, but for longer data storage we ended up saving datasets in parquet format, because in further `duckdb` version older databases might not work. Parquet datas can be pointed for `duckdb` and queries works as any sql databases.
+
+After downloading population and prevalences datasets, let's store files into duckdb database for further analyses. First load necessary packages 
+
+```{r}
+library(fs)
+library(dplyr)
+library(vroom)
+library(readxl)
+
+selected_countries <- c("Albania","Armenia","Austria","Azerbaijan","Belarus","Belgium","Bosnia and Herzegovina","Bulgaria","Croatia","Cyprus","Czechia","Denmark","Estonia","Finland","France","Georgia","Germany","Greece","Hungary","Iceland","Ireland","Italy","Kazakhstan","Latvia","Lithuania","Luxembourg","Malta","Republic of Moldova","Montenegro","Netherlands","North Macedonia","Norway","Poland","Portugal","Romania","Russian Federation","Serbia","Slovakia","Slovenia","Spain","Sweden","Switzerland","Turkey","Ukraine","United Kingdom")
+```
+
+### Population dataset
+
+Population dataset is in folder `data/IHME_GBD_2019_POP_2010_2019_SYA/`. Let's load all file locations
+
+```{r, eval = eval_loadflat}
+## List population datasets
+loc <- ("data/IHME_GBD_2019_POP_2010_2019_SYA/")
+files <- dir_ls(loc, glob = "*.CSV")
+
+## Load all files and clean the dataset
+POP <- NULL
+for(i in seq_along(files)) {
+  population <- vroom(files[i], id = "file_name")
+  
+  POP <- population %>% 
+    group_by(location_name, year_id, sex_name, age_group_name, age_group_id) %>% 
+    summarise(total_population = sum(val, na.rm = T)) %>% 
+    bind_rows(POP)
+  
+  rm(population)
+}
+
+## create a new age_group variable by re-adjusting age_group_name variable to integer
+unique(POP$age_group_name)
+POP$age_group <- POP$age_group_name
+POP$age_group[POP$age_group == "<1 year"] <- 0
+POP$age_group[POP$age_group == "95 plus"] <- 95
+POP$age_group <- as.integer(POP$age_group)
+
+## filter only selected_countries 
+POP <- POP %>% 
+  filter(location_name %in% selected_countries) 
+
+## Change location_names to universal
+POP$location_name[POP$location_name == "Czechia"] <- "Czech Republic"
+POP$location_name[POP$location_name == "Russian Federation"] <- "Russia"
+POP$location_name[POP$location_name == "North Macedonia"] <- "Macedonia"
+POP$location_name[POP$location_name == "Republic of Moldova"] <- "Moldova"
+
+## Calculate Total population in 2019 of selected selected_countries
+POP %>% 
+  filter(sex_name == "both" & year_id == 2019) %>% 
+  group_by(2019) %>%
+  summarise(pop = sum(total_population)) -> total_population_2019
+total_population_2019
+```
+
+### IHME dataset
+
+Datasets are in folder `data/ihmedata/`. Load all the file location into a object.
+
+```{r, eval = eval_loadflat}
+## List IHME datasets
+files <- fs::dir_ls ("data/ihmedata/", recurse = T, glob = "*.csv")
+
+## Load all files and filter only selected_countries
+IHME <- NULL
+for(i in seq_along(files)) {
+  IHME <- IHME %>% 
+    rbind(vroom(files[i], id = "file_name")) %>% 
+    filter(location_name %in% selected_countries)
+}
+
+## Filter dataset only to specific countries
+IHME <- IHME %>% 
+    filter(location_name %in% selected_countries)
+
+## Change location_names to universal
+IHME$location_name[IHME$location_name == "Czechia"] <- "Czech Republic"
+IHME$location_name[IHME$location_name == "Russian Federation"] <- "Russia"
+IHME$location_name[IHME$location_name == "North Macedonia"] <- "Macedonia"
+IHME$location_name[IHME$location_name == "Republic of Moldova"] <- "Moldova"
+```
+
+### Calculator files
+
+We have included a Excel file which holds data for the calculator. These data are taken from the article [Ameni et al. (2019) Cost-of-illness study of Obstructive Sleep Apnea Syndrome (OSAS) in Italy](https://cergas.unibocconi.eu/sites/default/files/files/Cost-of-illness-study-of-Obstructive-Sleep-Apnea-Syndrome-%2528OSAS%2529-in-Italy_Report%25281%2529.pdf)
+
+```{r}
+tbl1 <- readxl::read_xlsx("data/osa_tables.xlsx", sheet = "causes")
+tbl2 <- readxl::read_xlsx("data/osa_tables.xlsx", sheet = "osa_armeni")
+```
+
+
+### Storing the data to duckdb
+
+In this section we move created datasets to duckdb database and trasform to *parquet* file.  Firstly install duckdb and arrow packages
+
+```{r eval=FALSE}
+install.packages("duckdb")
+install.packages("arrow")
+```
+
+Create a connection and move datasets `POP` and `IHME` into duckdb. 
+
+```{r, eval = eval_dbsave}
+library(duckdb)
+con = dbConnect(duckdb::duckdb(), dbdir="./data/sleep22.duckdb", read_only=FALSE)
+dbWriteTable(con, "IHME", IHME, overwrite=TRUE)
+dbWriteTable(con, "POP", POP, overwrite=TRUE)
+dbWriteTable(con, "slapnea", tbl1, overwrite=TRUE)
+dbWriteTable(con, "paf", tbl2, overwrite=TRUE)
+dbDisconnect(conn = con)
+```
+
+Transform whole database to parquet file system
+
+```{r eval=eval_dbsave}
+## Transform to parquet
+con = dbConnect(duckdb::duckdb(), dbdir="./data/sleep22.duckdb", read_only=FALSE)
+if(dir.exists("data/parquet/")) fs::dir_delete("data/parquet/")
+if(!dir.exists("data/parquet/")) dir.create("data/parquet/")
+dbSendQuery(con, "EXPORT DATABASE 'data/parquet/' (FORMAT PARQUET);")
+dbDisconnect(conn = con)
+```
+
+
+## Database for Calculator Shiny
+
+In this chapter we are going to use same methods as in [calculation chapter](), but we are going to create database, which we can use in Shiny Application, where user can add his input values for sleep apnea prevalences, condition prevalences and costs.
+
+
+```{r}
+library(duckdb)
+library(arrow)
+library(dplyr)
+options(scipen = 999)
+
+## Load duckdb
+con = dbConnect(duckdb::duckdb(), dbdir="data/sleep22.duckdb", read_only=TRUE)
+
+```
+
+## Population datasets
+
+Calculating 15-74 years old populations
+
+```{r}
+## Both, female and male population (15-74yrs) in wide format
+library(tidyr)
+tbl(con, "pop") %>% 
+  filter(age_group > 14 & age_group < 75 & year_id == 2019) %>% 
+  group_by(location_name, sex_name) %>% 
+  summarise(pop = sum(total_population)) %>% 
+  collect() %>% 
+  pivot_wider(names_from = sex_name, values_from = pop) %>% 
+  rename(pop_1574_both = both,
+         pop_1574_female = female,
+         pop_1574_male = male) -> population_1574
+head(population_1574)
+```
+
+Calculating 30 to 69 years old population
+
+```{r}
+## Both, female and male population (30-69yrs) in wide format
+library(tidyr)
+tbl(con, "pop") %>% 
+  filter(age_group > 29 & age_group < 70 & year_id == 2019) %>% 
+  group_by(location_name, sex_name) %>% 
+  summarise(pop = sum(total_population)) %>% 
+  collect() %>% 
+  pivot_wider(names_from = sex_name, values_from = pop) %>% 
+  rename(pop_3069_both = both,
+         pop_3069_female = female,
+         pop_3069_male = male) -> population_3069
+head(population_3069)
+```
+
+```{r}
+# Join two populations to one dataset
+pop <- population_1574 %>% 
+  left_join(population_3069, by = "location_name")
+```
+
+Total populations
+
+```{r}
+## Both, female and male population (15-74yrs) in wide format
+library(tidyr)
+tbl(con, "pop") %>% 
+  filter(year_id == 2019) %>% 
+  group_by(location_name, sex_name) %>% 
+  summarise(pop = sum(total_population)) %>% 
+  collect() %>% 
+  pivot_wider(names_from = sex_name, values_from = pop) %>% 
+  rename(pop_both = both,
+         pop_female = female,
+         pop_male = male) -> popu_info
+head(popu_info)
+```
+
+
+```{r}
+rm(list=c("population_1574", "population_3069"))
+```
+
+
+
+## Prevalences from ihme dataset
+
+Calculating prevalences percentages by joining prevalences and population information
+
+```{r}
+## Get cause_id's which we can use from IHME dataset
+tbl(con, "causes") %>% 
+  filter(type == "prevalence") %>%
+  select(cause_id) %>% 
+  collect() -> causes
+causes <- causes$cause_id[!is.na(causes$cause_id)]
+
+## Get number of prevalences per location and causes from IHME (age: 15-74 and sex: both)
+tbl(con, "ihme") %>% 
+  filter(cause_id %in% causes & metric_name == "Number" & age_id > 7 & age_id < 20 & sex_id == 3) %>% 
+  group_by(location_name, cause_id, cause_name) %>% 
+  summarise(prevalence_number = sum(val)) %>% 
+  arrange(location_name, cause_id) %>% 
+  collect() -> prevalences_ihme
+## Calculate Prevalence Rates: join tables prevalences_ihme & pop
+prevalences_ihme %>% 
+  right_join(pop, by = "location_name") %>% 
+  mutate(prevalence = prevalence_number / pop_1574_both,
+         age_group = "1574")  %>% 
+  select(location_name, cause_id, cause_name, prevalence, age_group) -> prevalences_ihme
+
+
+## Prevalences data for 3069 ages
+## Get number of prevalences per location and causes from IHME (age: 30-69 and sex: both)
+tbl(con, "ihme") %>%
+  filter(cause_id %in% causes & metric_name == "Number" & age_id > 10 & age_id < 19 & sex_id == 3) %>%
+  group_by(location_name, cause_id, cause_name) %>%
+  summarise(prevalence_number = sum(val)) %>%
+  arrange(location_name, cause_id) %>%
+  collect() -> prevalences_ihme2
+## Calculate Prevalence Rates: join tables prevalences_ihme & pop
+prevalences_ihme2 %>%
+  right_join(pop, by = "location_name") %>%
+  mutate(prevalence = prevalence_number / pop_3069_both,
+         age_group = "3069")  %>%
+  select(location_name, cause_id, cause_name, prevalence, age_group) -> prevalences_ihme2
+
+
+## Join these two
+prevalences_ihme %>%
+  rbind(prevalences_ihme2) -> prevalences_ihme
+
+head(prevalences_ihme)
+```
+
+
+
+## Mortalities from ihme
+
+Calculating mortalities for two diseases and calculating percentages by joining mortality and population information
+
+- 1023 	Other cardiovascular and circulatory diseases
+- 294  	All causes
+
+```{r}
+## Get cause_id's which base values we can use to overwrite from IHME data
+tbl(con, "causes") %>% 
+  filter(type == "mortality") %>% 
+  select(cause_id) %>% 
+  collect() -> causes
+causes <- causes$cause_id[!is.na(causes$cause_id)]
+
+## Get mortality values from ihme
+tbl(con, "ihme") %>% 
+  filter(cause_id %in% causes & measure_name == "Deaths" & metric_name == "Number" & age_id > 7 & age_id < 20 & sex_id == 3) %>% 
+  group_by(location_name, cause_id, cause_name) %>% 
+  summarise(mortality_number = sum(val)) %>% 
+  arrange(location_name, cause_id) %>% 
+  collect() -> mortalities_ihme
+## Calculate Rates: join tables mortalities_ihme & pop
+mortalities_ihme %>% 
+  right_join(pop, by = "location_name") %>% 
+  mutate(mortality = mortality_number / pop_1574_both,
+         age_group = "1574") %>% 
+  select(location_name, cause_id, cause_name, mortality, age_group) -> mortalities_ihme
+
+
+## Mortalities data for 3069 ages
+## Get mortality values from ihme (30 - 69yrs)
+tbl(con, "ihme") %>%
+  filter(cause_id %in% causes & measure_name == "Deaths" & metric_name == "Number" & age_id > 10 & age_id < 19 & sex_id == 3) %>%
+  group_by(location_name, cause_id, cause_name) %>%
+  summarise(mortality_number = sum(val)) %>%
+  arrange(location_name, cause_id) %>%
+  collect() -> mortalities_ihme2
+## Calculate Rates: join tables mortalities_ihme & pop
+mortalities_ihme2 %>%
+  right_join(pop, by = "location_name") %>%
+  mutate(mortality = mortality_number / pop_3069_both,
+         age_group = "3069") %>%
+  select(location_name, cause_id, cause_name, mortality, age_group) -> mortalities_ihme2
+
+
+
+## Join these two
+mortalities_ihme %>%
+  rbind(mortalities_ihme2) -> mortalities_ihme
+
+head(mortalities_ihme)
+```
+
+```{r}
+## Join mortalities and prevalance data. Add name to describe value and rename 'mortality'/'prevalence' to 'value'.
+prevalences_ihme$type <- "prevalence"
+mortalities_ihme$type <- "mortality"
+ihme <- prevalences_ihme %>%
+  rbind(mortalities_ihme) %>% 
+  mutate(ihme = ifelse(is.na(prevalence), mortality, prevalence)) %>% 
+  select(location_name, cause_id, cause_name, type, ihme, age_group) %>% 
+  arrange(location_name, type, cause_id)
+head(ihme)
+```
+
+
+```{r}
+rm(list=c("mortalities_ihme", "prevalences_ihme", "mortalities_ihme2", "prevalences_ihme2"))
+```
+
+
+
+## Add also base values
+
+Base data (from excel) and country specific prevalences & mortalities
+
+
+```{r}
+## Base data. We need paf info for every country
+prevalences_base <- NULL
+for(cntry in unique(ihme$location_name)){
+  # print(cntry)
+  # tbl(con, "causes") %>% 
+  tbl(con, "slapnea") %>% 
+    collect() %>% 
+    mutate(location_name = cntry,
+           condition = Conditon) %>% 
+    select("location_name", 
+           "cause_id", 
+           "condition", 
+           "OR",
+           "RR",
+           "PAF", 
+           "prevalence_base_italy", 
+           "annual_direct_healthcare_cost",
+           "annual_direct_nonhealthcare_cost", 
+           "annual_productivity_losses_cost") %>% 
+    rbind(prevalences_base) -> prevalences_base
+}
+head(prevalences_base) #1296
+# 1296 *2 2592
+```
+
+With base values, join new calculated prevalences/mortalities from IHME
+
+```{r}
+## Join base data and new calculated prevalences, age_group 1574
+prevalences1 <- prevalences_base %>%
+  left_join(ihme %>% filter(age_group == "1574") , by = c("location_name", "cause_id")) %>% 
+  mutate(age_group = "1574") %>%
+  select(location_name, age_group, condition, cause_id, cause_name, ihme, prevalence_base_italy, OR, RR, PAF, annual_direct_healthcare_cost, annual_direct_nonhealthcare_cost, annual_productivity_losses_cost) %>% 
+  right_join(
+    pop %>% 
+      select(location_name, pop_1574_both, pop_1574_female, pop_1574_male) %>% 
+      rename(pop_both=pop_1574_both, pop_female=pop_1574_female, pop_male=pop_1574_male),
+    by = "location_name") ## Add the population to all rows
+
+## Join base data and new calculated prevalences, age_group 3069
+prevalences2 <- prevalences_base %>%
+  left_join(ihme %>% filter(age_group == "3069") , by = c("location_name", "cause_id")) %>% 
+  mutate(age_group = "3069") %>%
+  select(location_name, age_group, condition, cause_id, cause_name, ihme, prevalence_base_italy, OR, RR, PAF, annual_direct_healthcare_cost, annual_direct_nonhealthcare_cost, annual_productivity_losses_cost) %>% 
+  right_join(
+     pop %>% 
+      select(location_name, pop_3069_both, pop_3069_female, pop_3069_male) %>% 
+      rename(pop_both=pop_3069_both, pop_female=pop_3069_female, pop_male=pop_3069_male),
+    by = "location_name") ## Add the population to all rows
+
+# Join age_group prevalence  tables
+prevalences <- prevalences1 %>% 
+  rbind(prevalences2)
+
+head(prevalences)
+
+rm(list = c("prevalences1", "prevalences2", "prevalences_base", "ihme"))
+```
+
+
+
+
+## Table: prevalences and mortalities
+
+```{r}
+DT::datatable(prevalences, rownames = FALSE)
+```
+
+## Excel files
+
+### OSA values from article
+
+```{r}
+### TODO left here, get prevelance data for slider
+library(data.table)
+## Read from source excel
+osa <- readxl::read_xlsx("data/osa_tables.xlsx", sheet = "osa_armeni")
+## Sleep apnea prevalences
+osanew <- readxl::read_xlsx("data/osa_tables.xlsx", sheet = "osa_benjafield")
+osanew$country
+## How many countries are needed
+length(unique(prevalences$location_name))
+## Check which countries are not included in excel
+length(osanew$country[osanew$country %in% unique(prevalences$location_name)])
+## 3 countries missing, check names which are missing
+unique(prevalences$location_name)[!unique(prevalences$location_name) %in% osanew$country]
+## these are not included # [1] "Andorra"        "Monaco"         "San Marino"  
+
+## Filter dataset and Calculate Mild, Moderate, Severe values separately
+osanew <-osanew %>% 
+  filter(country %in% unique(prevalences$location_name)) %>% 
+  mutate(
+    Mild = `Mild-Moderate-Severe` - `Moderate-Severe`,
+    `Male_Moderate-Severe` = 1.3823 * `Moderate-Severe`, # Gender proportion is calculated from Italy data from Armeni article data
+    `Female_Moderate-Severe` = 0.6508 * `Moderate-Severe`, # Gender proportion is calculated from Italy data from Armeni article data
+    `Both_Moderate-Severe` = `Moderate-Severe`, # Gender proportion is calculated from Italy data from Armeni article data
+    Both_Mild = Mild,
+    Male_Mild =  0.9519 * Mild, # Gender proportion is calculated from Italy data from Armeni article data
+    Female_Mild = 1.0440 * Mild # Gender proportion is calculated from Italy data from Armeni article data
+  )
+
+osanew <- osanew %>% 
+  mutate(
+    ## TODO check these with comments
+    Female_Moderate = 0.5342 * `Female_Moderate-Severe`, # Moderate proportion percentage is calculated from Italy data from Armeni article data
+    Female_Severe =  0.4658 * `Female_Moderate-Severe`,   # Severe proportion percentage is calculated from Italy data from Armeni article data
+    Male_Moderate = 0.4004 * `Male_Moderate-Severe`, # Moderate proportion percentage is calculated from Italy data from Armeni article data
+    Male_Severe =  0.5996 * `Male_Moderate-Severe` ,
+    Both_Moderate = 0.445907 * `Both_Moderate-Severe`,
+    Both_Severe = 0.554093 * `Both_Moderate-Severe`
+  )
+
+## To longer format
+library(tidyr)
+osanew <- osanew %>%
+  tidyr::pivot_longer(c(`Male_Moderate-Severe`, `Male_Moderate`, `Male_Severe`, Male_Mild, `Female_Moderate-Severe`, `Female_Moderate`, `Female_Severe`,  Female_Mild, `Both_Moderate-Severe`, `Both_Moderate`, `Both_Severe`, Both_Mild), names_to = "var") %>%
+  rename(rate=value,
+         location_name = country) %>%
+  mutate(
+    ## Get gender and var right
+    gender = sub("_.*", "", var),
+    var = sub('.+_(.+)', '\\1', var) 
+    ) %>% 
+  select(location_name, var, gender, rate)
+```
+
+## Money index
+
+```{r}
+## First try HICP index, what countries are included -----
+## https://appsso.eurostat.ec.europa.eu/nui/show.do?dataset=prc_hicp_aind&lang=en
+hicp <- readxl::read_xls("data/prc_hicp_aind.xls")
+hicp$`GEO/TIME`[hicp$`GEO/TIME` == "Germany (until 1990 former territory of the FRG)"] <- "Germany" ## change name of the country
+
+## Calculate correction index to all other countries
+hicp %>% 
+  filter(`GEO/TIME` %in% unique(prevalences$location_name)) %>% 
+  rename(location_name = `GEO/TIME`) %>% 
+  select(location_name, `2019`) %>% 
+  mutate(index = `2019` / hicp$`2019`[hicp$`GEO/TIME` == "Italy"],
+         ver = "EuroStat") %>% 
+  select(location_name, index, ver) -> money_correction
+
+## This is missing few countries so their index correction is 1 (equal to Italy)
+## TODO find a way to correct these
+# unique(prevalences_base$location_name[!prevalences_base$location_name %in% money_correction$location_name])
+```
+
+
+```{r}
+dbDisconnect(con, shutdown=TRUE)
+```
+
+
+## Save data to new database
+
+### duckdb
+
+```{r, eval=eval_prevalences_savedb}
+# library(duckdb)
+# con = dbConnect(duckdb::duckdb(), dbdir="./data/sleep22_shiny.duckdb", read_only=FALSE)
+# dbWriteTable(con, "prevalences", prevalences, overwrite=TRUE)
+# dbWriteTable(con, "pop", pop, overwrite=TRUE)
+# dbWriteTable(con, "popu_info", popu_info, overwrite=TRUE)
+# dbWriteTable(con, "osa", osa, overwrite=TRUE)
+# dbWriteTable(con, "osanew", osanew, overwrite=TRUE)
+# dbWriteTable(con, "money_correction", money_correction, overwrite=TRUE)
+# dbDisconnect(con)
+# 
+# con = dbConnect(duckdb::duckdb(), dbdir="./data/sleep22_shiny.duckdb", read_only=FALSE)
+# if(dir.exists("data/parquet_shiny/")) fs::dir_delete("data/parquet_shiny/")
+# if(!dir.exists("data/parquet_shiny/")) dir.create("data/parquet_shiny/")
+# dbSendQuery(con, "EXPORT DATABASE 'data/parquet_shiny/' (FORMAT PARQUET);") # copy komento? COPY taulu TO ... FORMAT 
+
+# dbDisconnect(conn = con)
+```
+
+```{r, eval=FALSE}
+## Copy newdb to sleep22calculator
+# fils <- c(paste0(here::here(), "/data/sleep22_shiny.duckdb"), paste0(here::here(), "/data/sleep22_shiny.duckdb.wal"))
+# fs::file_copy(fils, "/Users/japmiett/projects/sleep22calculator/", overwrite = T)
+```
+
+### Parquet
+
+
+
+```{r}
+## Testing another way to save database only to parquet files
+con = dbConnect(duckdb::duckdb(), dbdir=":MEMORY:", read_only=FALSE)
+## Register tbls
+duckdb::duckdb_register(conn = con, name = "prevalences", df = prevalences)
+duckdb::duckdb_register(conn = con, name = "pop", df = pop)
+duckdb::duckdb_register(conn = con, name = "popu_info", df = popu_info)
+duckdb::duckdb_register(conn = con, name = "osa", df = osa)
+duckdb::duckdb_register(conn = con, name = "osanew", df = osanew)
+duckdb::duckdb_register(conn = con, name = "money_correction", df = money_correction)
+## Save to parquet
+dbSendQuery(con, "COPY (SELECT * FROM prevalences) TO 'data/parquet_shiny/prevalences.parquet' (FORMAT 'parquet');")
+dbSendQuery(con, "COPY (SELECT * FROM pop) TO 'data/parquet_shiny/pop.parquet' (FORMAT 'parquet');")
+dbSendQuery(con, "COPY (SELECT * FROM popu_info) TO 'data/parquet_shiny/popu_info.parquet' (FORMAT 'parquet');")
+dbSendQuery(con, "COPY (SELECT * FROM osa) TO 'data/parquet_shiny/osa.parquet' (FORMAT 'parquet');")
+dbSendQuery(con, "COPY (SELECT * FROM osanew) TO 'data/parquet_shiny/osanew.parquet' (FORMAT 'parquet');")
+dbSendQuery(con, "COPY (SELECT * FROM money_correction) TO 'data/parquet_shiny/money_correction.parquet' (FORMAT 'parquet');")
+dbDisconnect(conn = con)
+```
+
+```{r}
+## Copy to sleep22calculator
+fils <- list.files("data/parquet_shiny/", full.names = T) 
+fs::file_copy(fils, "/Users/japmiett/projects/sleep22calculator/data/", overwrite = T)
+```
+
+
+
+
+
+
+
+# Data for Visualizer Shiny
+
+We need this function for calculating PAF from Odd Ratio. 
+
+```{r}
+## PAF ODD RATIO formula -----
+## Give only decimals as parameters
+# PD  ## having a disease, prevalence
+# PE  ## exposed, sleep apnea prevalence?
+# PE_ ##  unexposed, 
+paf_or <- function(OR, PD, PE){
+  PD = PD * 100
+  PE = PE * 100
+  PE_ = 100 - PE
+  VALUE1 = (PD * (1 - OR) + PE_ + OR * PE + sqrt( (PD * (1 - OR) + PE_ + OR * PE )^2 - 4 * PE_ * (1 - OR) *PD )) / (2 * PE_ * (1 - OR))
+  VALUE2 = (PD * (1 - OR) + PE_ + OR * PE - sqrt( (PD * (1 - OR) + PE_ + OR * PE )^2 - 4 * PE_ * (1 - OR) *PD )) / (2 * PE_ * (1 - OR))
+  VALUE <- ifelse(VALUE1 < 100 & VALUE1 > 0, VALUE1, VALUE2)
+  PAF = 1 - ((100 * VALUE) / PD)
+  return(PAF)
+}
+
+```
+
+
+## Data Based on Armeni OSA
+
+```{r, eval = FALSE}
+## We need 4 precalculate datasets/values
+## Data for Armeni OSA table and no money index correction
+## Data for Armeni OSA table with money index correction
+## Data for Benjafield OSA table and no money index correction
+## Data for Benjafield OSA table with money index correction
+
+## 1) Data with Armeni OSA table and no money index correction
+prevalences %>% 
+  filter(age_group == "1574") %>% ## TODO Armeni / Benjafield
+  group_by(location_name) %>%
+  mutate(
+    # Select prevalence which to use
+    prevalence = ifelse(is.na(ihme), prevalence_base_italy, ihme), 
+    ## PAF calculation for Risk Ratio or Odds Ratio:
+    # osa_value = osa$rate[osa$gender == "Both" & osa$var == "Moderate-Severe"], ## TODO this needs to be specific  Armeni / Benjafield
+    osa_value = (osa$rate[osa$gender == "Male" & osa$var == "Moderate-Severe"] * pop_male + osa$rate[osa$gender == "Female" & osa$var == "Moderate-Severe"] * pop_female) / pop_both,
+    PAFRR = ifelse(!is.na(RR), (osa_value * (RR - 1) / (osa_value * (RR - 1) + 1)), NA), 
+    PAFOR = ifelse(!is.na(OR), paf_or(OR, prevalence, osa_value), NA),
+    PAF = ifelse(is.na(PAFOR), PAFRR, PAFOR),
+    ## Prevalents per conditions
+    prevalent_cases = prevalence * pop_both, ## Taudin prevalenssi * populaatio, ok
+    prevalent_cases_influenced_osa = PAF * prevalent_cases, ## PAF * prevalent_cases, ok
+    ## Costs per conditions
+    direct_cost = prevalent_cases_influenced_osa * annual_direct_healthcare_cost, ## ok
+    direct_non_healthcare_cost = prevalent_cases_influenced_osa * annual_direct_nonhealthcare_cost, ## ok
+    productivity_lost_cost = prevalent_cases_influenced_osa * annual_productivity_losses_cost, ## ok
+    direct_cost = ifelse(is.na(direct_cost), 0 , direct_cost),
+    direct_non_healthcare_cost = ifelse(is.na(direct_non_healthcare_cost), 0 , direct_non_healthcare_cost),
+    productivity_lost_cost = ifelse(is.na(productivity_lost_cost), 0 , productivity_lost_cost),
+    total_costs = direct_cost + direct_non_healthcare_cost + productivity_lost_cost) -> slapnea_cost1
+## Cpst per patient and sums
+slapnea_cost1 %>% 
+  group_by(location_name, pop_female, pop_male) %>% 
+  summarise(
+    ## Sums of costs
+    direct_cost = sum(direct_cost, na.rm = T),
+    direct_non_healthcare_cost = sum(direct_non_healthcare_cost, na.rm = T),
+    productivity_lost_cost = sum(productivity_lost_cost, na.rm = T)
+    )  %>% 
+  mutate(
+    ## Absolute values for dividing the cost per patient
+    absolute_value_severe_moderate = ( (pop_female * osa$rate[osa$var == "Moderate" & osa$gender == "Female"]) + (pop_female * osa$rate[osa$var == "Severe" & osa$gender == "Female"]) + (pop_male * osa$rate[osa$var == "Moderate" & osa$gender == "Male"]) + (pop_male * osa$rate[osa$var == "Severe" & osa$gender == "Male"])), ## ok
+    # absolute_value_mild = ( pop_female * osa$rate[osa$var == "Mild" & osa$gender == "Female"]) + (pop_male * osa$rate[osa$var == "Mild" & osa$gender == "Male"] ), ## ok
+    ## Costs per patients
+    patient_direct_cost = direct_cost / absolute_value_severe_moderate, ## ok
+    patient_nonhealthcare_cost = direct_non_healthcare_cost / absolute_value_severe_moderate, ## ok
+    patient_productivity_cost = productivity_lost_cost / absolute_value_severe_moderate, ## ok
+    ## Total cost per patient
+    patient_total_cost = patient_direct_cost + patient_nonhealthcare_cost + patient_productivity_cost ## ok
+  ) -> slapnea22
+## Write to calculation database
+saveRDS(slapnea22, file = "data/slapnea22.RDS")
+
+# View(slapnea_cost2[, c("location_name", "patient_total_cost")])
+# Results: costs are almost right, 50 - 100 difference. WHYYYY???
+
+slapnea22 %>% 
+  left_join(money_correction, by = "location_name") %>% 
+  mutate(
+    index= ifelse(is.na(index), 1, index),
+    direct_cost = direct_cost * index,
+    direct_non_healthcare_cost = direct_non_healthcare_cost * index,
+    productivity_lost_cost = productivity_lost_cost * index,
+    total_cost = direct_cost + direct_non_healthcare_cost +productivity_lost_cost,
+    ## Per patient
+    patient_direct_cost = direct_cost / absolute_value_severe_moderate, ## ok
+    patient_nonhealthcare_cost = direct_non_healthcare_cost / absolute_value_severe_moderate, ## ok
+    patient_productivity_cost = productivity_lost_cost / absolute_value_severe_moderate, ## ok
+    patient_total_cost = patient_direct_cost + patient_nonhealthcare_cost + patient_productivity_cost ## ok
+  ) -> slapnea22_eurostat
+## Write to calculation database
+saveRDS(slapnea22_eurostat, file = "data/slapnea22_eurostat.RDS")
+
+
+# ## Make money correction
+# if(input$money_index == "EuroStat '19"){
+#   dplot <- dplot %>%
+#     left_join(money_correction, by = "location_name") %>%
+#     mutate(corrected = ifelse(is.na(index), FALSE, TRUE),
+#            index = ifelse(is.na(index), 1, index),
+#            direct_cost = direct_cost * index,
+#            direct_non_healthcare_cost = direct_non_healthcare_cost * index,
+#            productivity_lost_cost = productivity_lost_cost * index,
+#            total_costs = total_costs * index)
+# }
+
+```
+
+## Data based on Benjafield OSA prevalence
+
+```{r}
+## Data for Benjafield OSA table and no money index correction
+## Data for Benjafield OSA table with money index correction
+
+## Missä kohtaa laskennassa käytetään uniapnean prevalenssia?
+
+## 1) Data with Armeni OSA table and no money index correction
+## Delete   "San Marino" "Monaco"     "Andorra"
+prevalences <- prevalences %>% 
+  filter(!location_name %in% c("San Marino", "Monaco", "Andorra"))
+
+prevalences %>% 
+  filter(age_group == "3069") %>% ##  Benjafield POP
+  group_by(location_name) %>%
+  mutate(
+    # Select prevalence which to use
+    prevalence = ifelse(is.na(ihme), prevalence_base_italy, ihme), 
+    ## PAF calculation for Risk Ratio or Odds Ratio:
+    ## TODO how  to make this connection in tidyverse?????
+    ## "San Marino" "Monaco"     "Andorra"  are missing from osanew. This needs to be fixed also in shinyapp!
+    ## Add these manually, italy values.
+    # osa_value = osa$rate[osa$gender == "Both" & osa$var == "Moderate-Severe"], ## TODO this needs to be specific  Armeni / Benjafield
+    osa_value = (osanew$rate[osanew$gender == "Male" & osanew$var == "Moderate-Severe" & osanew$location_name == location_name] * pop_male + osanew$rate[osanew$gender == "Female" & osanew$var == "Moderate-Severe" & osanew$location_name == location_name] * pop_female) / pop_both,
+    PAFRR = ifelse(!is.na(RR), (osa_value * (RR - 1) / (osa_value * (RR - 1) + 1)), NA), 
+    PAFOR = ifelse(!is.na(OR), paf_or(OR, prevalence, osa_value), NA),
+    PAF = ifelse(is.na(PAFOR), PAFRR, PAFOR),
+    ## Prevalents per conditions
+    prevalent_cases = prevalence * pop_both, ## Taudin prevalenssi * populaatio, ok
+    prevalent_cases_influenced_osa = PAF * prevalent_cases, ## PAF * prevalent_cases, ok
+    ## Costs per conditions
+    direct_cost = prevalent_cases_influenced_osa * annual_direct_healthcare_cost, ## ok
+    direct_non_healthcare_cost = prevalent_cases_influenced_osa * annual_direct_nonhealthcare_cost, ## ok
+    productivity_lost_cost = prevalent_cases_influenced_osa * annual_productivity_losses_cost, ## ok
+    direct_cost = ifelse(is.na(direct_cost), 0 , direct_cost),
+    direct_non_healthcare_cost = ifelse(is.na(direct_non_healthcare_cost), 0 , direct_non_healthcare_cost),
+    productivity_lost_cost = ifelse(is.na(productivity_lost_cost), 0 , productivity_lost_cost),
+    total_costs = direct_cost + direct_non_healthcare_cost + productivity_lost_cost) -> slapnea_cost1
+
+## Cost per patient and sums
+slapnea_cost1 %>% 
+  group_by(location_name, pop_female, pop_male) %>% 
+  summarise(
+    ## Sums of costs
+    direct_cost = sum(direct_cost, na.rm = T),
+    direct_non_healthcare_cost = sum(direct_non_healthcare_cost, na.rm = T),
+    productivity_lost_cost = sum(productivity_lost_cost, na.rm = T)
+    )  %>% 
+  mutate(
+    ## Absolute values for dividing the cost per patient
+    absolute_value_severe_moderate = ( (pop_female * osanew$rate[osanew$var == "Moderate" & osanew$gender == "Female" & osanew$location_name == location_name]) + (pop_female * osanew$rate[osanew$var == "Severe" & osanew$gender == "Female" & osanew$location_name == location_name]) + (pop_male * osanew$rate[osanew$var == "Moderate" & osanew$gender == "Male" & osanew$location_name == location_name]) + (pop_male * osanew$rate[osanew$var == "Severe" & osanew$gender == "Male" & osanew$location_name == location_name])), ## ok
+    # absolute_value_mild = ( pop_female * osa$rate[osa$var == "Mild" & osa$gender == "Female"]) + (pop_male * osa$rate[osa$var == "Mild" & osa$gender == "Male"] ), ## ok
+    ## Costs per patients
+    patient_direct_cost = direct_cost / absolute_value_severe_moderate, ## ok
+    patient_nonhealthcare_cost = direct_non_healthcare_cost / absolute_value_severe_moderate, ## ok
+    patient_productivity_cost = productivity_lost_cost / absolute_value_severe_moderate, ## ok
+    ## Total cost per patient
+    patient_total_cost = patient_direct_cost + patient_nonhealthcare_cost + patient_productivity_cost ## ok
+  ) -> slapnea22
+## Write to calculation database
+saveRDS(slapnea22, file = "data/slapnea22.RDS")
+
+# View(slapnea_cost2[, c("location_name", "patient_total_cost")])
+# Results: costs are almost right, 50 - 100 difference. WHYYYY???
+
+slapnea22 %>% 
+  left_join(money_correction, by = "location_name") %>% 
+  mutate(
+    index= ifelse(is.na(index), 1, index),
+    direct_cost = direct_cost * index,
+    direct_non_healthcare_cost = direct_non_healthcare_cost * index,
+    productivity_lost_cost = productivity_lost_cost * index,
+    total_cost = direct_cost + direct_non_healthcare_cost +productivity_lost_cost,
+    ## Per patient
+    patient_direct_cost = direct_cost / absolute_value_severe_moderate, ## ok
+    patient_nonhealthcare_cost = direct_non_healthcare_cost / absolute_value_severe_moderate, ## ok
+    patient_productivity_cost = productivity_lost_cost / absolute_value_severe_moderate, ## ok
+    patient_total_cost = patient_direct_cost + patient_nonhealthcare_cost + patient_productivity_cost ## ok
+  ) -> slapnea22_eurostat
+## Write to calculation database
+saveRDS(slapnea22_eurostat, file = "data/slapnea22_eurostat.RDS")
+
+```
+
+## Map data
+
+```{r}
+## Data for map
+# Read this shape file with the rgdal library. 
+library(rgdal)
+world_spdf <- readOGR( 
+  dsn= paste0(getwd(),"/data/map/") , 
+  layer="TM_WORLD_BORDERS_SIMPL-0.3",
+  verbose=FALSE
+)
+
+## Countries in our data
+countries <- tbl(con, "summary_slapnea_costs") %>% 
+  group_by(location_name) %>% 
+  summarise(1) %>% 
+  collect()
+countries <- countries$location_name
+
+## Countries in world data
+sort(world_spdf$NAME)
+
+## Rename few countries in world data and subset
+world_spdf$NAME[world_spdf$NAME == "The former Yugoslav Republic of Macedonia"] <- "Macedonia"
+world_spdf$NAME[world_spdf$NAME == "Republic of Moldova" ] <- "Moldova"
+europe_spdf <- subset(world_spdf, world_spdf$NAME %in% countries)
+countries[!countries %in% europe_spdf$NAME]
+
+## Write to calculation database
+saveRDS(europe_spdf, file = "data/europe_spdf.RDS")
+```
+
+## Save and copy data
+
+```{r, eval=FALSE}
+## Copy to sleep22visualizer
+fils <- c(paste0(here::here(), "/data/europe_spdf.RDS"), paste0(here::here(), "/data/slapnea22.RDS"), paste0(here::here(), "/data/slapnea22_eurostat.RDS"))
+fs::file_copy(fils, "/Users/japmiett/projects/sleep22visualizer/data/", overwrite = T)
+```
+
+
+
+
+
+
+
+
+## Building the calculator
+
+## Results
+
+
+## Thoughts
+
+
+## References
+
+Armeni et al. (2019) Cost-of-illness study of Obstructive Sleep Apnea Syndrome (OSAS) in Italy
+
+<!--chapter:end:10-article.Rmd-->
+
+
+
+## Calculate cost with varma cause_id
+## All cause_id:t
+## Check differences between costs
+
+<!--chapter:end:test-cause_id.Rmd-->
+
+
+
+## Unit check that PAF calculations are ok
+## Use Italy data from article and calculate PAF
+
+<!--chapter:end:test-paf_calc.Rmd-->
+

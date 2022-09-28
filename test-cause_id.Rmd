@@ -1,0 +1,359 @@
+---
+title: "cause_id validation"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(vroom)
+library(fs)
+library(purrr)
+library(dplyr)
+library(duckdb)
+library(arrow)
+library(dplyr)
+
+## Load duckdb database -----
+con <- dbConnect(duckdb::duckdb(), dbdir="data/sleep22.duckdb", read_only=TRUE)
+```
+
+This analyse test cause_id's from IHME aineisto which are unsure. We listed these on tbl3 on Excel sheet '/data/osa_table.xlsx'. It seems that we can't find match for every disease on cost calculate in IHME dataset.
+
+
+
+## Calculate cost with varma cause_id
+
+
+```{r}
+## Population Both, female and male population (15-74yrs) in wide format
+library(tidyr)
+tbl(con, "pop") %>% 
+  filter(age_group > 14 & age_group < 75 & year_id == 2019) %>% 
+  group_by(location_name, sex_name) %>% 
+  summarise(pop = sum(total_population)) %>% 
+  collect() %>% 
+  pivot_wider(names_from = sex_name, values_from = pop) %>% 
+  rename(pop_both = both,
+         pop_female = female,
+         pop_male = male) -> population_age_filtered
+
+## Get cause_id's which base values we can use to overwrite from IHME data
+tbl(con, "paf") %>% 
+  filter(type == "prevalence") %>% # TODO check if this is right!
+  select(cause_id) %>% 
+  collect() -> causes
+causes <- causes$cause_id[!is.na(causes$cause_id)]
+
+## Get number of prevalences per location and causes from IHME (age: 15-74 and sex: both)
+tbl(con, "ihme") %>% 
+  filter(cause_id %in% causes & metric_name == "Number" & age_id > 7 & age_id < 20 & sex_id == 3) %>% 
+  group_by(location_name, cause_id, cause_name) %>% 
+  summarise(prevalence_number = sum(val)) %>% 
+  arrange(location_name, cause_id) %>% 
+  collect() -> prevalences_ihme
+
+## Calculate Rates: join tables prevalences_ihme & population_age_filtered
+prevalences_ihme %>% 
+  right_join(population_age_filtered, by = "location_name") %>% 
+  mutate(prevalence = prevalence_number / pop_both)  %>% 
+  select(location_name, cause_id, cause_name, prevalence) -> prevalences_ihme
+
+## Get cause_id's which base values we can use to overwrite from IHME data
+tbl(con, "paf") %>% 
+  filter(type == "mortality") %>% 
+  select(cause_id) %>% 
+  collect() -> causes
+causes <- causes$cause_id[!is.na(causes$cause_id)]
+
+## Get mortality values from ihme
+tbl(con, "ihme") %>% 
+  filter(cause_id %in% causes & measure_name == "Deaths" & metric_name == "Number" & age_id > 7 & age_id < 20 & sex_id == 3) %>% 
+  group_by(location_name, cause_id, cause_name) %>% 
+  summarise(mortality_number = sum(val)) %>% 
+  arrange(location_name, cause_id) %>% 
+  collect() -> mortalities_ihme
+
+## Calculate Rates: join tables mortalities_ihme & population_age_filtered
+mortalities_ihme %>% 
+  right_join(population_age_filtered, by = "location_name") %>% 
+  mutate(mortality = mortality_number / pop_both) %>% 
+  select(location_name, cause_id, cause_name, mortality) -> mortalities_ihme
+
+## Join mortalities and prevalance data. Rename 'mortality'/'prevalence' to 'value'.
+ihme <- prevalences_ihme %>%
+  rbind(mortalities_ihme) %>% 
+  mutate(value = ifelse(is.na(prevalence), mortality, prevalence)) %>% 
+  select(location_name, cause_id, cause_name, value) %>% 
+  arrange(location_name, cause_id)
+
+## Base data. We need paf info for every country
+prevalences_base <- NULL
+for(cntry in unique(ihme$location_name)){
+  # print(cntry)
+  tbl(con, "paf") %>% 
+    collect() %>% 
+    mutate(location_name = cntry,
+           condition = Conditon) %>% 
+    select("location_name", 
+           "cause_id", 
+           "condition", 
+           "PAF", 
+           "prevalence_base_italy", 
+           "annual_direct_healthcare_cost",
+           "annual_direct_nonhealthcare_cost", 
+           "annual_productivity_losses_cost") %>% 
+    rbind(prevalences_base) -> prevalences_base
+}
+
+## Join base data and new calculated prevalences
+prevalences_final <- prevalences_base %>% 
+  left_join(ihme, by = c("location_name", "cause_id")) %>% 
+  mutate(value = ifelse(is.na(value), prevalence_base_italy, value)) %>% 
+  select(location_name, cause_id, cause_name, condition, PAF, value, prevalence_base_italy, annual_direct_healthcare_cost, annual_direct_nonhealthcare_cost, annual_productivity_losses_cost) %>% 
+  right_join(population_age_filtered, by = "location_name") ## Add the population to all rows
+
+head(prevalences_final)
+```
+
+
+
+```{r}
+### COSTS
+## Slapnea OSA absolute base data
+tbl(con, "slapnea") %>% 
+  collect() -> slapnea
+
+prevalences_final %>% 
+  mutate(
+    ## Formulas
+    prevalent_cases = value * pop_both,
+    prevalent_cases_influenced_osa = PAF * prevalent_cases,
+    direct_cost = prevalent_cases_influenced_osa * annual_direct_healthcare_cost,
+    direct_non_healthcare_cost = prevalent_cases_influenced_osa * annual_direct_nonhealthcare_cost,
+    productivity_lost_cost = prevalent_cases_influenced_osa * annual_productivity_losses_cost
+  ) %>% 
+  mutate(direct_cost = ifelse(is.na(direct_cost), 0 , direct_cost),
+         direct_non_healthcare_cost = ifelse(is.na(direct_non_healthcare_cost), 0 , direct_non_healthcare_cost),
+         productivity_lost_cost = ifelse(is.na(productivity_lost_cost), 0 , productivity_lost_cost),
+         total_costs = direct_cost + direct_non_healthcare_cost + productivity_lost_cost)  -> slapnea_costs
+
+## Calculate sums of direct, non healthcare and productivity lost costs.
+slapnea_costs %>% 
+  group_by(location_name, pop_female, pop_male) %>% 
+  summarise(direct_cost = sum(direct_cost, na.rm = T),
+            direct_non_healthcare_cost = sum(direct_non_healthcare_cost, na.rm = T),
+            productivity_lost_cost = sum(productivity_lost_cost, na.rm = T)) -> summary_slapnea_costs
+
+## Calculate per patient cost
+## by calculating absolute values (population) using OSA table (slapnea)
+summary_slapnea_costs %>% 
+  mutate(
+    ## Formulas
+    ## TODO: tarkista 
+    absolute_value_severe_moderate = ( (pop_female * slapnea$rate[slapnea$var == "Moderate" & slapnea$gender == "Female"]) + (pop_female * slapnea$rate[slapnea$var == "Severe" & slapnea$gender == "Female"]) + (pop_male * slapnea$rate[slapnea$var == "Moderate" & slapnea$gender == "Male"]) + (pop_male * slapnea$rate[slapnea$var == "Severe" & slapnea$gender == "Male"])),
+    absolute_value_mild = ( pop_female * slapnea$rate[slapnea$var == "Mild" & slapnea$gender == "Female"] + pop_male * slapnea$rate[slapnea$var == "Mild" & slapnea$gender == "Male"] ),
+    patient_direct_cost = direct_cost / absolute_value_severe_moderate,
+    patient_nonhealthcare_cost = direct_non_healthcare_cost / absolute_value_mild, 
+    patient_productivity_cost = productivity_lost_cost / absolute_value_mild,
+    patient_total_cost = patient_direct_cost + patient_nonhealthcare_cost + patient_productivity_cost
+  ) -> summary_slapnea_costs
+
+head(summary_slapnea_costs)
+```
+
+
+
+
+
+
+## All cause_id:t
+
+```{r}
+## Population Both, female and male population (15-74yrs) in wide format
+tbl(con, "pop") %>% 
+  filter(age_group > 14 & age_group < 75 & year_id == 2019) %>% 
+  group_by(location_name, sex_name) %>% 
+  summarise(pop = sum(total_population)) %>% 
+  collect() %>% 
+  pivot_wider(names_from = sex_name, values_from = pop) %>% 
+  rename(pop_both = both,
+         pop_female = female,
+         pop_male = male) -> population_age_filtered
+
+## Get cause_id's which base values we can use to overwrite from IHME data
+tbl3 <- readxl::read_xlsx("data/osa_tables.xlsx", sheet = "tbl3")
+tbl3 %>% 
+  filter(type == "prevalence") %>% # TODO check if this is right!
+  select(cause_id) -> causes
+causes <- causes$cause_id[!is.na(causes$cause_id)]
+
+## Get number of prevalences per location and causes from IHME (age: 15-74 and sex: both)
+tbl(con, "ihme") %>% 
+  filter(cause_id %in% causes & metric_name == "Number" & age_id > 7 & age_id < 20 & sex_id == 3) %>% 
+  group_by(location_name, cause_id, cause_name) %>% 
+  summarise(prevalence_number = sum(val)) %>% 
+  arrange(location_name, cause_id) %>% 
+  collect() -> prevalences_ihme
+
+## Calculate Rates: join tables prevalences_ihme & population_age_filtered
+prevalences_ihme %>% 
+  right_join(population_age_filtered, by = "location_name") %>% 
+  mutate(prevalence = prevalence_number / pop_both)  %>% 
+  select(location_name, cause_id, cause_name, prevalence) -> prevalences_ihme
+
+## Get cause_id's which base values we can use to overwrite from IHME data
+tbl3 %>% 
+  filter(type == "mortality") %>% 
+  select(cause_id) %>% 
+  collect() -> causes
+causes <- causes$cause_id[!is.na(causes$cause_id)]
+
+## Get mortality values from ihme
+tbl(con, "ihme") %>% 
+  filter(cause_id %in% causes & measure_name == "Deaths" & metric_name == "Number" & age_id > 7 & age_id < 20 & sex_id == 3) %>% 
+  group_by(location_name, cause_id, cause_name) %>% 
+  summarise(mortality_number = sum(val)) %>% 
+  arrange(location_name, cause_id) %>% 
+  collect() -> mortalities_ihme
+
+## Calculate Rates: join tables mortalities_ihme & population_age_filtered
+mortalities_ihme %>% 
+  right_join(population_age_filtered, by = "location_name") %>% 
+  mutate(mortality = mortality_number / pop_both) %>% 
+  select(location_name, cause_id, cause_name, mortality) -> mortalities_ihme
+
+## Join mortalities and prevalance data. Rename 'mortality'/'prevalence' to 'value'.
+ihme <- prevalences_ihme %>%
+  rbind(mortalities_ihme) %>% 
+  mutate(value = ifelse(is.na(prevalence), mortality, prevalence)) %>% 
+  select(location_name, cause_id, cause_name, value) %>% 
+  arrange(location_name, cause_id)
+
+## Base data. We need paf info for every country
+prevalences_base <- NULL
+tbl3 <- readxl::read_xlsx("data/osa_tables.xlsx", sheet = "tbl3")
+for(cntry in unique(ihme$location_name)){
+  # print(cntry)
+  tbl3 %>% 
+    mutate(location_name = cntry,
+           condition = Conditon) %>% 
+    select("location_name", 
+           "cause_id", 
+           "condition", 
+           "PAF", 
+           "prevalence_base_italy", 
+           "annual_direct_healthcare_cost",
+           "annual_direct_nonhealthcare_cost", 
+           "annual_productivity_losses_cost") %>% 
+    rbind(prevalences_base) -> prevalences_base
+}
+
+## Join base data and new calculated prevalences
+prevalences_final_allci <- prevalences_base %>% 
+  left_join(ihme, by = c("location_name", "cause_id")) %>% 
+  mutate(value = ifelse(is.na(value), prevalence_base_italy, value)) %>% 
+  select(location_name, cause_id, cause_name, condition, PAF, value, prevalence_base_italy, annual_direct_healthcare_cost, annual_direct_nonhealthcare_cost, annual_productivity_losses_cost) %>% 
+  right_join(population_age_filtered, by = "location_name") ## Add the population to all rows
+
+head(prevalences_final_allci)
+```
+
+
+
+```{r}
+## Slapnea OSA absolute base data
+tbl(con, "slapnea") %>% 
+  collect() -> slapnea
+
+prevalences_final_allci %>% 
+  mutate(
+    ## Formulas
+    prevalent_cases = value * pop_both,
+    prevalent_cases_influenced_osa = PAF * prevalent_cases,
+    direct_cost = prevalent_cases_influenced_osa * annual_direct_healthcare_cost,
+    direct_non_healthcare_cost = prevalent_cases_influenced_osa * annual_direct_nonhealthcare_cost,
+    productivity_lost_cost = prevalent_cases_influenced_osa * annual_productivity_losses_cost
+  ) %>% 
+  mutate(direct_cost = ifelse(is.na(direct_cost), 0 , direct_cost),
+         direct_non_healthcare_cost = ifelse(is.na(direct_non_healthcare_cost), 0 , direct_non_healthcare_cost),
+         productivity_lost_cost = ifelse(is.na(productivity_lost_cost), 0 , productivity_lost_cost),
+         total_costs = direct_cost + direct_non_healthcare_cost + productivity_lost_cost)  -> slapnea_costs_allci
+
+## Calculate sums of direct, non healthcare and productivity lost costs.
+slapnea_costs_allci %>% 
+  group_by(location_name, pop_female, pop_male) %>% 
+  summarise(direct_cost = sum(direct_cost, na.rm = T),
+            direct_non_healthcare_cost = sum(direct_non_healthcare_cost, na.rm = T),
+            productivity_lost_cost = sum(productivity_lost_cost, na.rm = T)) -> summary_slapnea_costs_allci
+
+## Calculate per patient cost
+## by calculating absolute values (population) using OSA table (slapnea)
+summary_slapnea_costs_allci %>% 
+  mutate(
+    ## Formulas
+    ## TODO: tarkista 
+    absolute_value_severe_moderate = ( (pop_female * slapnea$rate[slapnea$var == "Moderate" & slapnea$gender == "Female"]) + (pop_female * slapnea$rate[slapnea$var == "Severe" & slapnea$gender == "Female"]) + (pop_male * slapnea$rate[slapnea$var == "Moderate" & slapnea$gender == "Male"]) + (pop_male * slapnea$rate[slapnea$var == "Severe" & slapnea$gender == "Male"])),
+    absolute_value_mild = ( pop_female * slapnea$rate[slapnea$var == "Mild" & slapnea$gender == "Female"] + pop_male * slapnea$rate[slapnea$var == "Mild" & slapnea$gender == "Male"] ),
+    patient_direct_cost = direct_cost / absolute_value_severe_moderate,
+    patient_nonhealthcare_cost = direct_non_healthcare_cost / absolute_value_mild, 
+    patient_productivity_cost = productivity_lost_cost / absolute_value_mild,
+    patient_total_cost = patient_direct_cost + patient_nonhealthcare_cost + patient_productivity_cost
+  ) -> summary_slapnea_costs_allci
+```
+
+```{r}
+dbDisconnect(con)
+```
+
+
+
+## Check differences between costs
+
+```{r}
+unique(prevalences_final_allci$cause_id)[!unique(prevalences_final_allci$cause_id) %in% unique(prevalences_final$cause_id)]
+```
+
+```{r}
+library(ggplot2)
+options(scipen =  999)
+
+## full costs -----
+summary_slapnea_costs %>% 
+  mutate(causes="sure") -> d1
+summary_slapnea_costs_allci %>% 
+  mutate(causes="all") -> d2
+dplot <- rbind(d1,d2)
+
+
+ggplot(data=dplot) +
+  geom_bar(aes(x= location_name, y = patient_total_cost, group = causes, fill = causes), stat = "identity", position = "dodge") + 
+  coord_flip()
+```
+
+
+```{r}
+## create visualisation by one country per disease cost -----
+  
+slapnea_costs %>% 
+  filter(location_name == "Italy") %>% 
+    mutate(causes = "sure") %>% 
+  select(location_name, cause_id, cause_name, condition, causes, total_costs) -> d1
+slapnea_costs_allci %>% 
+  filter(location_name == "Italy") %>% 
+    mutate(causes = "all") %>% 
+  select(location_name, cause_id, cause_name, condition, causes, total_costs) -> d2
+dplot <- rbind(d1,d2)
+
+ggplot(data = dplot) +
+  geom_bar(aes(x = condition, y = total_costs, group = causes, fill = causes), stat = "identity", position = "dodge") +
+  coord_flip() +
+  labs(title = "Italy costs per causes")
+
+```
+
+
+

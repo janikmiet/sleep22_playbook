@@ -1,0 +1,28 @@
+```{r setup_interactive, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Interactive applications
+
+Here are links for the Shiny applications created
+
+## Shiny: Map visualization
+
+```{r}
+knitr::include_app(url = "https://janimiettinen.shinyapps.io/sleepapneacost/")
+```
+
+- URL: <https://janimiettinen.shinyapps.io/sleepapneacost/>
+
+## Shiny: Calculator
+
+```{r}
+knitr::include_app(url = "https://janimiettinen.shinyapps.io/sleepapneacalculator/")
+```
+
+- URL: <https://janimiettinen.shinyapps.io/sleepapneacalculator/>
+
+
+# References
+
+Web pages and shiny <https://bookdown.org/yihui/bookdown/web-pages-and-shiny-apps.html>
