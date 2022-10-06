@@ -159,10 +159,10 @@ IHME$location_name[IHME$location_name == "Republic of Moldova"] <- "Moldova"
 We have included a Excel file which holds data for the calculator. These data are taken from the article [Ameni et al. (2019) Cost-of-illness study of Obstructive Sleep Apnea Syndrome (OSAS) in Italy](https://cergas.unibocconi.eu/sites/default/files/files/Cost-of-illness-study-of-Obstructive-Sleep-Apnea-Syndrome-%2528OSAS%2529-in-Italy_Report%25281%2529.pdf)
 
 ```{r}
-tbl1 <- readxl::read_xlsx("data/osa_tables.xlsx", sheet = "causes")
-tbl4 <- readxl::read_xlsx("data/osa_tables.xlsx", sheet = "causes_simple")
-tbl2 <- readxl::read_xlsx("data/osa_tables.xlsx", sheet = "osa_armeni")
-tbl3 <- readxl::read_xlsx("data/osa_tables.xlsx", sheet = "osa_benjafield")
+tbl1 <- readxl::read_xlsx("files/osa_tables.xlsx", sheet = "causes")
+tbl4 <- readxl::read_xlsx("files/osa_tables.xlsx", sheet = "causes_simple")
+tbl2 <- readxl::read_xlsx("files/osa_tables.xlsx", sheet = "osa_armeni")
+tbl3 <- readxl::read_xlsx("files/osa_tables.xlsx", sheet = "osa_benjafield")
 ```
 
 
@@ -208,5 +208,8 @@ dbSendQuery(con, "EXPORT DATABASE 'data/parquet/' (FORMAT PARQUET);")
 dbDisconnect(conn = con)
 ```
 
+```{r}
+#END
+```
 
 

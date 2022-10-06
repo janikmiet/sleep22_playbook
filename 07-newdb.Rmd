@@ -46,32 +46,10 @@ tbl(con, "pop") %>%
   pivot_wider(names_from = sex_name, values_from = pop) %>% 
   rename(pop_1574_both = both,
          pop_1574_female = female,
-         pop_1574_male = male) -> population_1574
-head(population_1574)
+         pop_1574_male = male) -> pop
+head(pop)
 ```
 
-Calculating 30 to 69 years old population
-
-```{r}
-## Both, female and male population (30-69yrs) in wide format
-library(tidyr)
-tbl(con, "pop") %>% 
-  filter(age_group > 29 & age_group < 70 & year_id == 2019) %>% 
-  group_by(location_name, sex_name) %>% 
-  summarise(pop = sum(total_population)) %>% 
-  collect() %>% 
-  pivot_wider(names_from = sex_name, values_from = pop) %>% 
-  rename(pop_3069_both = both,
-         pop_3069_female = female,
-         pop_3069_male = male) -> population_3069
-head(population_3069)
-```
-
-```{r}
-# Join two populations to one dataset
-pop <- population_1574 %>% 
-  left_join(population_3069, by = "location_name")
-```
 
 Total populations
 
@@ -88,11 +66,6 @@ tbl(con, "pop") %>%
          pop_female = female,
          pop_male = male) -> popu_info
 head(popu_info)
-```
-
-
-```{r}
-rm(list=c("population_1574", "population_3069"))
 ```
 
 
@@ -119,30 +92,9 @@ tbl(con, "ihme") %>%
 ## Calculate Prevalence Rates: join tables prevalences_ihme & pop
 prevalences_ihme %>% 
   right_join(pop, by = "location_name") %>% 
-  mutate(prevalence = prevalence_number / pop_1574_both,
-         age_group = "1574")  %>% 
-  select(location_name, cause_id, cause_name, prevalence, age_group) -> prevalences_ihme
-
-
-## Prevalences data for 3069 ages
-## Get number of prevalences per location and causes from IHME (age: 30-69 and sex: both)
-tbl(con, "ihme") %>%
-  filter(cause_id %in% causes & metric_name == "Number" & age_id > 10 & age_id < 19 & sex_id == 3) %>%
-  group_by(location_name, cause_id, cause_name) %>%
-  summarise(prevalence_number = sum(val)) %>%
-  arrange(location_name, cause_id) %>%
-  collect() -> prevalences_ihme2
-## Calculate Prevalence Rates: join tables prevalences_ihme & pop
-prevalences_ihme2 %>%
-  right_join(pop, by = "location_name") %>%
-  mutate(prevalence = prevalence_number / pop_3069_both,
-         age_group = "3069")  %>%
-  select(location_name, cause_id, cause_name, prevalence, age_group) -> prevalences_ihme2
-
-
-## Join these two
-prevalences_ihme %>%
-  rbind(prevalences_ihme2) -> prevalences_ihme
+  mutate(prevalence = prevalence_number / pop_1574_both
+         )  %>% 
+  select(location_name, cause_id, cause_name, prevalence) -> prevalences_ihme
 
 head(prevalences_ihme)
 ```
@@ -174,31 +126,8 @@ tbl(con, "ihme") %>%
 ## Calculate Rates: join tables mortalities_ihme & pop
 mortalities_ihme %>% 
   right_join(pop, by = "location_name") %>% 
-  mutate(mortality = mortality_number / pop_1574_both,
-         age_group = "1574") %>% 
-  select(location_name, cause_id, cause_name, mortality, age_group) -> mortalities_ihme
-
-
-## Mortalities data for 3069 ages
-## Get mortality values from ihme (30 - 69yrs)
-tbl(con, "ihme") %>%
-  filter(cause_id %in% causes & measure_name == "Deaths" & metric_name == "Number" & age_id > 10 & age_id < 19 & sex_id == 3) %>%
-  group_by(location_name, cause_id, cause_name) %>%
-  summarise(mortality_number = sum(val)) %>%
-  arrange(location_name, cause_id) %>%
-  collect() -> mortalities_ihme2
-## Calculate Rates: join tables mortalities_ihme & pop
-mortalities_ihme2 %>%
-  right_join(pop, by = "location_name") %>%
-  mutate(mortality = mortality_number / pop_3069_both,
-         age_group = "3069") %>%
-  select(location_name, cause_id, cause_name, mortality, age_group) -> mortalities_ihme2
-
-
-
-## Join these two
-mortalities_ihme %>%
-  rbind(mortalities_ihme2) -> mortalities_ihme
+  mutate(mortality = mortality_number / pop_1574_both) %>% 
+  select(location_name, cause_id, cause_name, mortality) -> mortalities_ihme
 
 head(mortalities_ihme)
 ```
@@ -210,14 +139,14 @@ mortalities_ihme$type <- "mortality"
 ihme <- prevalences_ihme %>%
   rbind(mortalities_ihme) %>% 
   mutate(ihme = ifelse(is.na(prevalence), mortality, prevalence)) %>% 
-  select(location_name, cause_id, cause_name, type, ihme, age_group) %>% 
+  select(location_name, cause_id, cause_name, type, ihme) %>% 
   arrange(location_name, type, cause_id)
 head(ihme)
 ```
 
 
 ```{r}
-rm(list=c("mortalities_ihme", "prevalences_ihme", "mortalities_ihme2", "prevalences_ihme2"))
+rm(list=c("mortalities_ihme", "prevalences_ihme"))
 ```
 
 
@@ -231,18 +160,14 @@ Base data (from excel) and country specific prevalences & mortalities
 ## Simple causes data / PAF and base values for each country
 prevalences_base_simple <- NULL
 for(cntry in unique(ihme$location_name)){
-  # print(cntry)
-  # tbl(con, "causes") %>% 
   tbl(con, "causes_simple") %>% 
     collect() %>% 
-    mutate(location_name = cntry,
-           condition = Conditon) %>% 
+    mutate(location_name = cntry) %>%
     select("location_name", 
            "cause_id", 
            "condition", 
-           "OR",
-           "RR",
            "PAF", 
+           "multiplier",
            "prevalence_base_italy", 
            "direct_healthcare_cost",
            "direct_nonhealthcare_cost", 
@@ -258,15 +183,16 @@ for(cntry in unique(ihme$location_name)){
   # tbl(con, "causes") %>% 
   tbl(con, "causes") %>% 
     collect() %>% 
-    mutate(location_name = cntry,
-           condition = Conditon) %>% 
+    mutate(location_name = cntry) %>% 
     select("location_name", 
            "cause_id", 
            "condition", 
            "OSA_severity",
+           "gender",
            "OR",
            "RR",
            "PAF", 
+           "multiplier",
            "prevalence_base_italy", 
            "direct_healthcare_cost",
            "direct_nonhealthcare_cost", 
@@ -280,69 +206,43 @@ head(prevalences_base) #1296
 With base values, join new calculated prevalences/mortalities from IHME
 
 ```{r}
-## Join base data and new calculated prevalences, age_group 1574
-prevalences1 <- prevalences_base %>%
-  left_join(ihme %>% filter(age_group == "1574") , by = c("location_name", "cause_id")) %>% 
-  mutate(age_group = "1574") %>%
-  select(location_name, age_group, condition, OSA_severity, cause_id, cause_name, ihme, prevalence_base_italy, OR, RR, PAF, direct_healthcare_cost, direct_nonhealthcare_cost, productivity_losses_cost) %>% 
+## Join base data and new calculated prevalences
+## Calculate condition prevalences from ihme data using multiplier (=ratio between armeni and ihme condition)
+prevalences <- prevalences_base %>%
+  left_join(ihme, by = c("location_name", "cause_id")) %>% 
+  select(location_name, condition, OSA_severity, gender, cause_id, cause_name, multiplier, ihme, prevalence_base_italy, OR, RR, PAF, direct_healthcare_cost, direct_nonhealthcare_cost, productivity_losses_cost) %>% 
   right_join(
     pop %>% 
       select(location_name, pop_1574_both, pop_1574_female, pop_1574_male) %>% 
       rename(pop_both=pop_1574_both, pop_female=pop_1574_female, pop_male=pop_1574_male),
-    by = "location_name") ## Add the population to all rows
+    by = "location_name") %>%  ## Add the population to all rows
+  mutate(ihme = ifelse(is.na(ihme), NA, multiplier * ihme),
+         multiplier = NULL)
 
-## Join base data and new calculated prevalences, age_group 3069
-prevalences2 <- prevalences_base %>%
-  left_join(ihme %>% filter(age_group == "3069") , by = c("location_name", "cause_id")) %>% 
-  mutate(age_group = "3069") %>%
-  select(location_name, age_group, condition, OSA_severity, cause_id, cause_name, ihme, prevalence_base_italy, OR, RR, PAF, direct_healthcare_cost, direct_nonhealthcare_cost, productivity_losses_cost) %>% 
-  right_join(
-     pop %>% 
-      select(location_name, pop_3069_both, pop_3069_female, pop_3069_male) %>% 
-      rename(pop_both=pop_3069_both, pop_female=pop_3069_female, pop_male=pop_3069_male),
-    by = "location_name") ## Add the population to all rows
 
-# Join age_group prevalence  tables
-prevalences <- prevalences1 %>% 
-  rbind(prevalences2)
-
-head(prevalences)
-
-rm(list = c("prevalences1", "prevalences2", "prevalences_base"))
+rm(list = c("prevalences_base"))
 ```
 
-With base values, join new calculated prevalences/mortalities from IHME
+And same to simple table 
 
 ```{r}
-## Join base data and new calculated prevalences, age_group 1574
-prevalences1 <- prevalences_base_simple %>%
-  left_join(ihme %>% filter(age_group == "1574") , by = c("location_name", "cause_id")) %>% 
-  mutate(age_group = "1574") %>%
-  select(location_name, age_group, condition, cause_id, cause_name, ihme, prevalence_base_italy, OR, RR, PAF, direct_healthcare_cost, direct_nonhealthcare_cost, productivity_losses_cost) %>% 
+## Join base data and new calculated prevalences
+## Calculate condition prevalences from ihme data using multiplier (=ratio between armeni and ihme condition)
+prevalences_simple <- prevalences_base_simple %>%
+  left_join(ihme, by = c("location_name", "cause_id")) %>% 
+  select(location_name, condition, cause_id, cause_name, multiplier, ihme, prevalence_base_italy,  PAF, direct_healthcare_cost, direct_nonhealthcare_cost, productivity_losses_cost) %>% 
   right_join(
     pop %>% 
       select(location_name, pop_1574_both, pop_1574_female, pop_1574_male) %>% 
       rename(pop_both=pop_1574_both, pop_female=pop_1574_female, pop_male=pop_1574_male),
-    by = "location_name") ## Add the population to all rows
+    by = "location_name") %>%  ## Add the population to all rows
+  mutate(ihme = ifelse(is.na(ihme), NA, multiplier * ihme),
+         multiplier = NULL)
 
-## Join base data and new calculated prevalences, age_group 3069
-prevalences2 <- prevalences_base_simple %>%
-  left_join(ihme %>% filter(age_group == "3069") , by = c("location_name", "cause_id")) %>% 
-  mutate(age_group = "3069") %>%
-  select(location_name, age_group, condition, cause_id, cause_name, ihme, prevalence_base_italy, OR, RR, PAF, direct_healthcare_cost, direct_nonhealthcare_cost, productivity_losses_cost) %>% 
-  right_join(
-     pop %>% 
-      select(location_name, pop_3069_both, pop_3069_female, pop_3069_male) %>% 
-      rename(pop_both=pop_3069_both, pop_female=pop_3069_female, pop_male=pop_3069_male),
-    by = "location_name") ## Add the population to all rows
-
-# Join age_group prevalence  tables
-prevalences_simple <- prevalences1 %>% 
-  rbind(prevalences2)
 
 head(prevalences_simple)
 
-rm(list = c("prevalences1", "prevalences2", "prevalences_base_simple", "ihme"))
+rm(list = c("prevalences_base_simple", "ihme"))
 ```
 
 
@@ -362,21 +262,21 @@ DT::datatable(prevalences, rownames = FALSE)
 ### TODO left here, get prevelance data for slider
 library(data.table)
 ## Read from source excel
-osa <- readxl::read_xlsx("data/osa_tables.xlsx", sheet = "osa_armeni")
+osa <- readxl::read_xlsx("files/osa_tables.xlsx", sheet = "osa_armeni")
 ## Sleep apnea prevalences
-osanew <- readxl::read_xlsx("data/osa_tables.xlsx", sheet = "osa_benjafield")
-osanew$country
+osanew <- readxl::read_xlsx("files/osa_tables.xlsx", sheet = "osa_benjafield")
+osanew$location_name
 ## How many countries are needed
 length(unique(prevalences$location_name))
 ## Check which countries are not included in excel
-length(osanew$country[osanew$country %in% unique(prevalences$location_name)])
+length(osanew$location_name[osanew$location_name %in% unique(prevalences$location_name)])
 ## 3 countries missing, check names which are missing
-unique(prevalences$location_name)[!unique(prevalences$location_name) %in% osanew$country]
+unique(prevalences$location_name)[!unique(prevalences$location_name) %in% osanew$location_name]
 ## these are not included # [1] "Andorra"        "Monaco"         "San Marino"  
 
 ## Filter dataset and Calculate Mild, Moderate, Severe values separately
 osanew <-osanew %>% 
-  filter(country %in% unique(prevalences$location_name)) %>% 
+  filter(location_name %in% unique(prevalences$location_name)) %>% 
   mutate(
     Mild = `Mild-Moderate-Severe` - `Moderate-Severe`,
     `Male_Moderate-Severe` = 1.3823 * `Moderate-Severe`, # Gender proportion is calculated from Italy data from Armeni article data
@@ -401,15 +301,14 @@ osanew <- osanew %>%
 ## To longer format
 library(tidyr)
 osanew <- osanew %>%
-  tidyr::pivot_longer(c(`Male_Moderate-Severe`, `Male_Moderate`, `Male_Severe`, Male_Mild, `Female_Moderate-Severe`, `Female_Moderate`, `Female_Severe`,  Female_Mild, `Both_Moderate-Severe`, `Both_Moderate`, `Both_Severe`, Both_Mild), names_to = "var") %>%
-  rename(rate=value,
-         location_name = country) %>%
+  tidyr::pivot_longer(c(`Male_Moderate-Severe`, `Male_Moderate`, `Male_Severe`, Male_Mild, `Female_Moderate-Severe`, `Female_Moderate`, `Female_Severe`,  Female_Mild, `Both_Moderate-Severe`, `Both_Moderate`, `Both_Severe`, Both_Mild), names_to = "OSA_severity") %>%
+  rename(osa_rate=value) %>%
   mutate(
-    ## Get gender and var right
-    gender = sub("_.*", "", var),
-    var = sub('.+_(.+)', '\\1', var) 
+    ## Get gender and OSA_severity right
+    gender = sub("_.*", "", OSA_severity),
+    OSA_severity = sub('.+_(.+)', '\\1', OSA_severity) 
     ) %>% 
-  select(location_name, var, gender, rate)
+  select(location_name, OSA_severity, gender, osa_rate)
 ```
 
 ## Money index
@@ -417,7 +316,7 @@ osanew <- osanew %>%
 ```{r}
 ## First try HICP index, what countries are included -----
 ## https://appsso.eurostat.ec.europa.eu/nui/show.do?dataset=prc_hicp_aind&lang=en
-hicp <- readxl::read_xls("data/prc_hicp_aind.xls")
+hicp <- readxl::read_xls("files/prc_hicp_aind.xls")
 hicp$`GEO/TIME`[hicp$`GEO/TIME` == "Germany (until 1990 former territory of the FRG)"] <- "Germany" ## change name of the country
 
 ## Calculate correction index to all other countries
@@ -548,8 +447,8 @@ prevalences %>%
     # Select prevalence which to use
     prevalence = ifelse(is.na(ihme), prevalence_base_italy, ihme), 
     ## PAF calculation for Risk Ratio or Odds Ratio:
-    # osa_value = osa$rate[osa$gender == "Both" & osa$var == "Moderate-Severe"], ## TODO this needs to be specific  Armeni / Benjafield
-    osa_value = (osa$rate[osa$gender == "Male" & osa$var == "Moderate-Severe"] * pop_male + osa$rate[osa$gender == "Female" & osa$var == "Moderate-Severe"] * pop_female) / pop_both,
+    # osa_value = osa$osa_rate[osa$gender == "Both" & osa$var == "Moderate-Severe"], ## TODO this needs to be specific  Armeni / Benjafield
+    osa_value = (osa$osa_rate[osa$gender == "Male" & osa$var == "Moderate-Severe"] * pop_male + osa$osa_rate[osa$gender == "Female" & osa$var == "Moderate-Severe"] * pop_female) / pop_both,
     PAFRR = ifelse(!is.na(RR), (osa_value * (RR - 1) / (osa_value * (RR - 1) + 1)), NA), 
     PAFOR = ifelse(!is.na(OR), paf_or(OR, prevalence, osa_value), NA),
     PAF = ifelse(is.na(PAFOR), PAFRR, PAFOR),
@@ -575,8 +474,8 @@ slapnea_cost1 %>%
     )  %>% 
   mutate(
     ## Absolute values for dividing the cost per patient
-    absolute_value_severe_moderate = ( (pop_female * osa$rate[osa$var == "Moderate" & osa$gender == "Female"]) + (pop_female * osa$rate[osa$var == "Severe" & osa$gender == "Female"]) + (pop_male * osa$rate[osa$var == "Moderate" & osa$gender == "Male"]) + (pop_male * osa$rate[osa$var == "Severe" & osa$gender == "Male"])), ## ok
-    # absolute_value_mild = ( pop_female * osa$rate[osa$var == "Mild" & osa$gender == "Female"]) + (pop_male * osa$rate[osa$var == "Mild" & osa$gender == "Male"] ), ## ok
+    absolute_value_severe_moderate = ( (pop_female * osa$osa_rate[osa$var == "Moderate" & osa$gender == "Female"]) + (pop_female * osa$osa_rate[osa$var == "Severe" & osa$gender == "Female"]) + (pop_male * osa$osa_rate[osa$var == "Moderate" & osa$gender == "Male"]) + (pop_male * osa$osa_rate[osa$var == "Severe" & osa$gender == "Male"])), ## ok
+    # absolute_value_mild = ( pop_female * osa$osa_rate[osa$var == "Mild" & osa$gender == "Female"]) + (pop_male * osa$osa_rate[osa$var == "Mild" & osa$gender == "Male"] ), ## ok
     ## Costs per patients
     patient_direct_cost = direct_cost / absolute_value_severe_moderate, ## ok
     patient_nonhealthcare_cost = direct_non_healthcare_cost / absolute_value_severe_moderate, ## ok
@@ -645,8 +544,8 @@ prevalences %>%
     ## TODO how  to make this connection in tidyverse?????
     ## "San Marino" "Monaco"     "Andorra"  are missing from osanew. This needs to be fixed also in shinyapp!
     ## Add these manually, italy values.
-    # osa_value = osa$rate[osa$gender == "Both" & osa$var == "Moderate-Severe"], ## TODO this needs to be specific  Armeni / Benjafield
-    osa_value = (osanew$rate[osanew$gender == "Male" & osanew$var == "Moderate-Severe" & osanew$location_name == location_name] * pop_male + osanew$rate[osanew$gender == "Female" & osanew$var == "Moderate-Severe" & osanew$location_name == location_name] * pop_female) / pop_both,
+    # osa_value = osa$osa_rate[osa$gender == "Both" & osa$var == "Moderate-Severe"], ## TODO this needs to be specific  Armeni / Benjafield
+    osa_value = (osanew$osa_rate[osanew$gender == "Male" & osanew$var == "Moderate-Severe" & osanew$location_name == location_name] * pop_male + osanew$osa_rate[osanew$gender == "Female" & osanew$var == "Moderate-Severe" & osanew$location_name == location_name] * pop_female) / pop_both,
     PAFRR = ifelse(!is.na(RR), (osa_value * (RR - 1) / (osa_value * (RR - 1) + 1)), NA), 
     PAFOR = ifelse(!is.na(OR), paf_or(OR, prevalence, osa_value), NA),
     PAF = ifelse(is.na(PAFOR), PAFRR, PAFOR),
@@ -673,8 +572,8 @@ slapnea_cost1 %>%
     )  %>% 
   mutate(
     ## Absolute values for dividing the cost per patient
-    absolute_value_severe_moderate = ( (pop_female * osanew$rate[osanew$var == "Moderate" & osanew$gender == "Female" & osanew$location_name == location_name]) + (pop_female * osanew$rate[osanew$var == "Severe" & osanew$gender == "Female" & osanew$location_name == location_name]) + (pop_male * osanew$rate[osanew$var == "Moderate" & osanew$gender == "Male" & osanew$location_name == location_name]) + (pop_male * osanew$rate[osanew$var == "Severe" & osanew$gender == "Male" & osanew$location_name == location_name])), ## ok
-    # absolute_value_mild = ( pop_female * osa$rate[osa$var == "Mild" & osa$gender == "Female"]) + (pop_male * osa$rate[osa$var == "Mild" & osa$gender == "Male"] ), ## ok
+    absolute_value_severe_moderate = ( (pop_female * osanew$osa_rate[osanew$var == "Moderate" & osanew$gender == "Female" & osanew$location_name == location_name]) + (pop_female * osanew$osa_rate[osanew$var == "Severe" & osanew$gender == "Female" & osanew$location_name == location_name]) + (pop_male * osanew$osa_rate[osanew$var == "Moderate" & osanew$gender == "Male" & osanew$location_name == location_name]) + (pop_male * osanew$osa_rate[osanew$var == "Severe" & osanew$gender == "Male" & osanew$location_name == location_name])), ## ok
+    # absolute_value_mild = ( pop_female * osa$osa_rate[osa$var == "Mild" & osa$gender == "Female"]) + (pop_male * osa$osa_rate[osa$var == "Mild" & osa$gender == "Male"] ), ## ok
     ## Costs per patients
     patient_direct_cost = direct_cost / absolute_value_severe_moderate, ## ok
     patient_nonhealthcare_cost = direct_non_healthcare_cost / absolute_value_severe_moderate, ## ok
