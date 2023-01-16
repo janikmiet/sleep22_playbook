@@ -36,7 +36,12 @@ source("global.R")
 
 THIS PROJECT ESTIMATES SLEEP APNEA COSTS IN EUROPE. DATA IS PUBLICLY AVAILABLE AT <http://ghdx.healthdata.org/> BY CC BY-NC-ND 4.0 LICENCE. RESULTS CAN BE REPLICATED BY THIS GUIDE. 
 
-We are interested sleep apnea costs in Europe between age groups of 15-74 / 30-69 years old. Data is collected from the year 2019. Following countries are included to the estimation:
+This project has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement no. 965417. 
+
+![](img/alllogos.png)
+![](img/uef.png){width=4%}
+
+We are interested sleep apnea costs in Europe between age group of 15-74 years old. Data is collected from the year 2019. Following countries are included to the estimation:
 
 ```{r echo=FALSE}
 countries <- c("Albania","Armenia","Austria","Azerbaijan","Belarus","Belgium","Bosnia and Herzegovina","Bulgaria","Croatia","Cyprus","Czechia","Denmark","Estonia","Finland","France","Georgia","Germany","Greece","Hungary","Iceland","Ireland","Italy","Kazakhstan","Latvia","Lithuania","Luxembourg","Malta","Republic of Moldova","Montenegro","Netherlands","North Macedonia","Norway","Poland","Portugal","Romania","Russian Federation","Serbia","Slovakia","Slovenia","Spain","Sweden","Switzerland","Turkey","Ukraine","United Kingdom")

@@ -92,6 +92,8 @@ dbGetQuery(con, "SELECT DISTINCT cause_id, cause_name FROM ihme ORDER BY cause_i
 
 ### Calculator datas
 
+
+
 ```{r}
 tbl(con, "causes") %>% 
   collect()

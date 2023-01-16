@@ -27,15 +27,14 @@ if(TRUE){
     "01-flatfiles.Rmd",
     "02-database.Rmd",
     "03-eda.Rmd",
-    "04-calculations.Rmd",
+    "04-newdb.Rmd",
     "05-results.Rmd",
-    "06-results_corrected.Rmd",
-    "07-newdb.Rmd",
-    "08-interactive.Rmd",
+    "06-interactive.Rmd",
     "09-about.Rmd",
     "global.R",
     "site.yaml",
-    "data/",   ## TODO how to use datasets without copying?
+    "data/",
+    "files/",   ## TODO how to use datasets without copying?
     "img/"
   ),
   to = "temp", 

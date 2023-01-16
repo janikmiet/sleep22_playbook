@@ -5,7 +5,7 @@ eval_prevalences_savedb = FALSE
 
 # Database for Calculator Shiny
 
-In this chapter we are going to use same methods as in [calculation chapter](), but we are going to create database, which we can use in Shiny Applications, where user can add his input values for sleep apnea prevalences, condition prevalences and costs.
+In this chapter we are going to create database, which we can use in Shiny Applications as well in [results]()-section. In Shiny app user can add his input values for sleep apnea prevalences, condition prevalences and costs, and so get more specific results.
 
 
 ```{r}
@@ -36,7 +36,7 @@ con = dbConnect(duckdb::duckdb(), dbdir="data/sleep22.duckdb", read_only=TRUE)
 Calculating 15-74 years old populations
 
 ```{r}
-## Both, female and male population (15-74yrs) in wide format
+## 15-74yrs Both, female and male population in wide format
 library(tidyr)
 tbl(con, "pop") %>% 
   filter(age_group > 14 & age_group < 75 & year_id == 2019) %>% 
@@ -44,9 +44,15 @@ tbl(con, "pop") %>%
   summarise(pop = sum(total_population)) %>% 
   collect() %>% 
   pivot_wider(names_from = sex_name, values_from = pop) %>% 
-  rename(pop_1574_both = both,
-         pop_1574_female = female,
-         pop_1574_male = male) -> pop
+  rename(pop_both = both,
+         pop_female = female,
+         pop_male = male) %>% 
+  mutate(
+    pop_both = round(pop_both, 0),
+    pop_female = round(pop_female, 0),
+    pop_male = round(pop_male, 0),
+    ages = "15-74"
+  ) -> pop
 head(pop)
 ```
 
@@ -54,7 +60,7 @@ head(pop)
 Total populations
 
 ```{r}
-## Both, female and male population (15-74yrs) in wide format
+## Total Both, female and male population in wide format
 library(tidyr)
 tbl(con, "pop") %>% 
   filter(year_id == 2019) %>% 
@@ -64,8 +70,17 @@ tbl(con, "pop") %>%
   pivot_wider(names_from = sex_name, values_from = pop) %>% 
   rename(pop_both = both,
          pop_female = female,
-         pop_male = male) -> popu_info
+         pop_male = male) %>% 
+  mutate(
+    pop_both = round(pop_both, 0),
+    pop_female = round(pop_female, 0),
+    pop_male = round(pop_male, 0),
+    ages = "total"
+    ) -> popu_info
 head(popu_info)
+
+## One dataset
+pop <- pop %>% rbind(popu_info)
 ```
 
 
@@ -91,8 +106,8 @@ tbl(con, "ihme") %>%
   collect() -> prevalences_ihme
 ## Calculate Prevalence Rates: join tables prevalences_ihme & pop
 prevalences_ihme %>% 
-  right_join(pop, by = "location_name") %>% 
-  mutate(prevalence = prevalence_number / pop_1574_both
+  right_join(pop %>% filter(ages == "15-74"), by = "location_name") %>% 
+  mutate(prevalence = prevalence_number / pop_both
          )  %>% 
   select(location_name, cause_id, cause_name, prevalence) -> prevalences_ihme
 
@@ -125,8 +140,8 @@ tbl(con, "ihme") %>%
   collect() -> mortalities_ihme
 ## Calculate Rates: join tables mortalities_ihme & pop
 mortalities_ihme %>% 
-  right_join(pop, by = "location_name") %>% 
-  mutate(mortality = mortality_number / pop_1574_both) %>% 
+  right_join(pop %>% filter(ages == "15-74"), by = "location_name") %>% 
+  mutate(mortality = mortality_number / pop_both) %>% 
   select(location_name, cause_id, cause_name, mortality) -> mortalities_ihme
 
 head(mortalities_ihme)
@@ -213,10 +228,11 @@ prevalences <- prevalences_base %>%
   select(location_name, condition, OSA_severity, gender, cause_id, cause_name, multiplier, ihme, prevalence_base_italy, OR, RR, PAF, direct_healthcare_cost, direct_nonhealthcare_cost, productivity_losses_cost) %>% 
   right_join(
     pop %>% 
-      select(location_name, pop_1574_both, pop_1574_female, pop_1574_male) %>% 
-      rename(pop_both=pop_1574_both, pop_female=pop_1574_female, pop_male=pop_1574_male),
+      filter(ages == "15-74") %>% 
+      select(location_name, pop_both, pop_female, pop_male),
     by = "location_name") %>%  ## Add the population to all rows
-  mutate(ihme = ifelse(is.na(ihme), NA, multiplier * ihme),
+  mutate(#tamaluku = ihme,
+         ihme = ifelse(is.na(ihme), NA, multiplier * ihme),
          multiplier = NULL)
 
 
@@ -233,8 +249,8 @@ prevalences_simple <- prevalences_base_simple %>%
   select(location_name, condition, cause_id, cause_name, multiplier, ihme, prevalence_base_italy,  PAF, direct_healthcare_cost, direct_nonhealthcare_cost, productivity_losses_cost) %>% 
   right_join(
     pop %>% 
-      select(location_name, pop_1574_both, pop_1574_female, pop_1574_male) %>% 
-      rename(pop_both=pop_1574_both, pop_female=pop_1574_female, pop_male=pop_1574_male),
+      filter(ages == "15-74") %>% 
+      select(location_name, pop_both, pop_female, pop_male),
     by = "location_name") %>%  ## Add the population to all rows
   mutate(ihme = ifelse(is.na(ihme), NA, multiplier * ihme),
          multiplier = NULL)
@@ -254,9 +270,9 @@ rm(list = c("prevalences_base_simple", "ihme"))
 DT::datatable(prevalences, rownames = FALSE)
 ```
 
-## Excel files
 
-### OSA values from article
+
+## OSA values from article (Excel)
 
 ```{r}
 ### TODO left here, get prevelance data for slider
@@ -311,7 +327,7 @@ osanew <- osanew %>%
   select(location_name, OSA_severity, gender, osa_rate)
 ```
 
-## Money index
+## Money index Excel
 
 ```{r}
 ## First try HICP index, what countries are included -----
@@ -348,7 +364,6 @@ dbDisconnect(con, shutdown=TRUE)
 # con = dbConnect(duckdb::duckdb(), dbdir="./data/sleep22_shiny.duckdb", read_only=FALSE)
 # dbWriteTable(con, "prevalences", prevalences, overwrite=TRUE)
 # dbWriteTable(con, "pop", pop, overwrite=TRUE)
-# dbWriteTable(con, "popu_info", popu_info, overwrite=TRUE)
 # dbWriteTable(con, "osa", osa, overwrite=TRUE)
 # dbWriteTable(con, "osanew", osanew, overwrite=TRUE)
 # dbWriteTable(con, "money_correction", money_correction, overwrite=TRUE)
@@ -374,19 +389,17 @@ dbDisconnect(con, shutdown=TRUE)
 
 ```{r}
 ## Testing another way to save database only to parquet files
-con = dbConnect(duckdb::duckdb(), dbdir=":MEMORY:", read_only=FALSE)
+con = dbConnect(duckdb::duckdb(), dbdir=":memory:", read_only=FALSE) ## TODO not working
 ## Register tbls
 duckdb::duckdb_register(conn = con, name = "prevalences", df = prevalences)
 duckdb::duckdb_register(conn = con, name = "prevalences_simple", df = prevalences_simple)
 duckdb::duckdb_register(conn = con, name = "pop", df = pop)
-duckdb::duckdb_register(conn = con, name = "popu_info", df = popu_info)
 duckdb::duckdb_register(conn = con, name = "osa", df = osa)
 duckdb::duckdb_register(conn = con, name = "osanew", df = osanew)
 duckdb::duckdb_register(conn = con, name = "money_correction", df = money_correction)
 ## Save to parquet
 dbSendQuery(con, "COPY (SELECT * FROM prevalences) TO 'data/parquet_shiny/prevalences.parquet' (FORMAT 'parquet');")
 dbSendQuery(con, "COPY (SELECT * FROM pop) TO 'data/parquet_shiny/pop.parquet' (FORMAT 'parquet');")
-dbSendQuery(con, "COPY (SELECT * FROM popu_info) TO 'data/parquet_shiny/popu_info.parquet' (FORMAT 'parquet');")
 dbSendQuery(con, "COPY (SELECT * FROM osa) TO 'data/parquet_shiny/osa.parquet' (FORMAT 'parquet');")
 dbSendQuery(con, "COPY (SELECT * FROM osanew) TO 'data/parquet_shiny/osanew.parquet' (FORMAT 'parquet');")
 dbSendQuery(con, "COPY (SELECT * FROM money_correction) TO 'data/parquet_shiny/money_correction.parquet' (FORMAT 'parquet');")
@@ -438,11 +451,7 @@ paf_or <- function(OR, PD, PE){
 
 ```{r}
 population <- pop %>% 
-  rename(
-    pop_both = pop_1574_both,
-    pop_female = pop_1574_female,
-    pop_male = pop_1574_male
-  )
+  filter(ages=="15-74")
 ```
 
 
@@ -577,3 +586,65 @@ saveRDS(europe_spdf, file = "data/europe_spdf.RDS")
 fils <- c(paste0(here::here(), "/data/europe_spdf.RDS"), paste0(here::here(), "/data/slapnea22.RDS"), paste0(here::here(), "/data/slapnea22_eurostat.RDS"))
 fs::file_copy(fils, "/Users/japmiett/projects/sleep22visualizer/data/", overwrite = T)
 ```
+
+
+
+
+
+# Validation
+
+Next we are going to validate the calculation to the article [Armeni et al. (2019) *Cost-of-illness study of Obstructive Sleep Apnea Syndrome (OSAS) in Italy*](https://cergas.unibocconi.eu/sites/default/files/files/Cost-of-illness-study-of-Obstructive-Sleep-Apnea-Syndrome-%2528OSAS%2529-in-Italy_Report%25281%2529.pdf). Because we use different data, results are going to be different,
+.
+
+## Population
+
+Population in Armeni dataset is 
+
+: Aged 15-74: Population |
+|-----------|------------|  
+| Female    | 22 708 659 |
+| Male	    | 22 279 959 |
+| Total	    | 44 988 618 |
+
+In our dataset from IHME data, population is a bit larger:
+
+```{r, eval = FALSE, echo=FALSE}
+slapnea22 %>% 
+  filter(location_name == "Italy") %>% 
+  select(pop_female, pop_male) %>% 
+  mutate(pop_total = pop_female + pop_male) %>% 
+  tidyr::pivot_longer(c(pop_total, pop_female, pop_male), "Population") %>% 
+  select(Population, value)
+```
+
+## Prevalences
+
+**under construction**
+
+Prevalences in the article are combined from different datasources (table 9, page 37). We have a bit different prevalences which are shown below:
+
+```{r, include=FALSE, eval=FALSE}
+# # Stroke tarkistus
+# tbl(con, "ihme") %>% 
+#   filter(cause_id == 494 & location_name == "Italy" & measure_name == "Prevalence" & metric_name == "Number" & age_id > 7 & age_id < 20 & sex_id == 3) %>% 
+#   summarise(stroke = sum(val, na.rm = T))
+# # 430529
+# 
+# ## Population
+# tbl(con, "pop") %>% 
+#   filter(location_name == "Italy" & sex_name == "both" & age_group > 14 & age_group < 75 & year_id == 2019) %>% 
+#   summarise(population = sum(total_population))
+# # 45304482
+# 
+# ## Stroke 15-74 vaestosta
+# (430529/45304482) * 100
+## eli  0.95 % vaestosta
+## artikkelissa luku on 0.2 %, joten ilmeisemmin laskenta on oikein (5x kustannus)
+```
+
+
+```{r, eval=FALSE, echo=FALSE}
+val <- readxl::read_xlsx("files/validation-italy.xlsx", sheet = "validation_summary")
+DT::datatable(val, rownames = FALSE)
+```
+
